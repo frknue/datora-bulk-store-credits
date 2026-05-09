@@ -1,0 +1,39 @@
+# TODO: replace client_id with the new "Datora | Bulk Store Credits | Dev" Partner app id (run `shopify app config link`)
+client_id = ""
+name = "Datora | Bulk Store Credits | Dev"
+application_url = "https://example.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "app-store-apps-furkan.myshopify.com"
+
+[webhooks]
+api_version = "2026-01"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customer/data-request"
+  compliance_topics = [ "customers/data_request" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customer/redact"
+  compliance_topics = [ "customers/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/shop/redact"
+  compliance_topics = [ "shop/redact" ]
+
+[access_scopes]
+scopes = "read_customers,read_gift_cards,write_customers,write_gift_card_transactions,write_gift_cards,read_store_credit_accounts,write_store_credit_account_transactions,read_store_credit_account_transactions"
+
+[auth]
+redirect_urls = [ "https://example.com/auth/callback" ]
+

@@ -1,0 +1,31 @@
+app = 'datora-bulk-gift-cards-worker'
+primary_region = 'fra'
+kill_signal = 'SIGTERM'
+kill_timeout = '35s'
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "15s"
+    method = "GET"
+    timeout = "3s"
+    path = "/health"
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[env]
+  SHOPIFY_APP_HANDLE = "datora-bulk-gift-cards-v2"
+
+[deploy]
+  strategy = "rolling"

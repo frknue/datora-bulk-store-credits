@@ -1,0 +1,9 @@
+[[extensions]]
+name = "t:name"
+handle = "support-link"
+uid = "b2d65ba8-7075-82c8-3905-e552772f66269bdc9d91"
+type = "admin_link"
+
+[[extensions.targeting]]
+target = "admin.app.support.link"
+url = "app://"

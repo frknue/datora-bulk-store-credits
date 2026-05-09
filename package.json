@@ -1,0 +1,92 @@
+{
+  "name": "datora-bulk-store-credits",
+  "private": true,
+  "scripts": {
+    "shopify": "shopify",
+    "pull-env": "shopify app env pull --env-file web/.env",
+    "build": "shopify app build",
+    "start": "npx react-router-serve ./build/server/index.js",
+    "dev": "bash dev.sh",
+    "dev:localhost": "bash dev.sh --use-localhost",
+    "generate-extension": "shopify app generate extension",
+    "deploy": "shopify app deploy",
+    "generate": "shopify app generate",
+    "info": "shopify app info",
+    "lint": "npm run lint:app && npm run lint:extensions && npm run lint:shared",
+    "lint:app": "eslint app --ext .ts,.tsx",
+    "lint:extensions": "eslint extensions/send-gift-cards/src extensions/send-gift-cards-segment/src --ext .ts,.tsx",
+    "lint:shared": "eslint shared --ext .ts",
+    "lint:fix": "npm run lint:fix:app && npm run lint:fix:extensions && npm run lint:fix:shared",
+    "lint:fix:app": "eslint app --ext .ts,.tsx --fix",
+    "lint:fix:extensions": "eslint extensions/send-gift-cards/src extensions/send-gift-cards-segment/src --ext .ts,.tsx --fix",
+    "lint:fix:shared": "eslint shared --ext .ts --fix",
+    "format": "prettier --write \"app/**/*.{ts,tsx}\" \"e2e/**/*.{ts,tsx}\" \"extensions/**/*.{ts,tsx}\" \"shared/**/*.ts\"",
+    "format:check": "prettier --check \"app/**/*.{ts,tsx}\" \"e2e/**/*.{ts,tsx}\" \"extensions/**/*.{ts,tsx}\" \"shared/**/*.ts\"",
+    "typecheck": "npm run typecheck:app && npm run typecheck:extensions",
+    "typecheck:app": "npx react-router typegen && tsc --noEmit",
+    "typecheck:extensions": "npx tsc -p extensions/send-gift-cards/tsconfig.json --noEmit && npx tsc -p extensions/send-gift-cards-segment/tsconfig.json --noEmit",
+    "test:worker": "cd services/worker && go test ./...",
+    "verify": "npm run lint && npm run typecheck && npm run test:worker",
+    "test:e2e:setup": "npx tsx e2e/auth/setup.ts",
+    "test:e2e": "npx playwright test",
+    "test:e2e:headed": "npx playwright test --headed"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20.19 <22 || >=22.12"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.3",
+    "@react-router/dev": "^7.10.1",
+    "@react-router/fs-routes": "^7.10.1",
+    "@react-router/node": "^7.10.1",
+    "@react-router/serve": "^7.10.1",
+    "@shopify/app-bridge-react": "^4.2.4",
+    "@shopify/shopify-app-react-router": "^1.1.0",
+    "@shopify/shopify-app-session-storage-prisma": "^8.0.0",
+    "ioredis": "^5.4.1",
+    "isbot": "^5.1.31",
+    "luxon": "^3.5.0",
+    "nodemailer": "^6.9.16",
+    "prisma": "^6.16.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router": "^7.10.1",
+    "recharts": "^2.15.0",
+    "vite-tsconfig-paths": "^5.1.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@shopify/api-codegen-preset": "^1.2.0",
+    "@shopify/polaris-types": "^1.0.1",
+    "@types/eslint": "^9.6.1",
+    "@types/luxon": "^3.4.2",
+    "@types/node": "^22.18.8",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^18.3.25",
+    "@types/react-dom": "^18.3.7",
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^3.10.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "graphql-config": "^5.1.1",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "vite": "^6.3.6"
+  },
+  "workspaces": [
+    "extensions/*"
+  ],
+  "trustedDependencies": [
+    "@shopify/plugin-cloudflare"
+  ],
+  "overrides": {
+    "p-map": "^4.0.0"
+  },
+  "author": "furkanulker"
+}

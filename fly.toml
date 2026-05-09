@@ -1,0 +1,65 @@
+app = 'datora-bulk-store-credits'
+primary_region = 'fra'
+kill_signal = 'SIGINT'
+kill_timeout = '35s'
+
+[build]
+
+[deploy]
+  release_command = 'npx prisma migrate deploy'
+  strategy = "rolling"
+
+[processes]
+  web = "npm run start"
+  worker = "/app/worker"
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '3000'
+
+# Web app: public-facing HTTP service
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["web"]
+
+  [http_service.concurrency]
+    type = 'connections'
+    hard_limit = 100
+    soft_limit = 80
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "15s"
+    method = "GET"
+    timeout = "3s"
+    path = "/health"
+
+# Worker: health check only (not publicly exposed, reachable via internal network)
+[[checks]]
+  name = "worker-health"
+  port = 8080
+  type = "http"
+  interval = "15s"
+  timeout = "3s"
+  grace_period = "10s"
+  method = "GET"
+  path = "/health"
+  processes = ["worker"]
+
+# Web machines
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  processes = ["web"]
+
+# Worker machines
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  processes = ["worker"]

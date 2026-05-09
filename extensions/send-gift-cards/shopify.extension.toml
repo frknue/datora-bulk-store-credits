@@ -1,0 +1,11 @@
+api_version = "2025-07"
+
+[[extensions]]
+name = "t:name"
+handle = "send-gift-cards"
+uid = "e430ea37-66fa-8019-d047-8422da5fcec5a94d2b85"
+type = "ui_extension"
+
+[[extensions.targeting]]
+module = "./src/ActionExtension.tsx"
+target = "admin.customer-index.selection-action.render"

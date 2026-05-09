@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  shopName            String  @id @map("shop_name")
+  showCard            Boolean @default(true) @map("show_card")
+  showContactCard     Boolean @default(true) @map("show_contact_card")
+  completedOnboarding Boolean @default(false) @map("completed_onboarding")
+  autoDeactivateDays  Int?    @map("auto_deactivate_days")
+  slackWebhookUrl     String? @map("slack_webhook_url")
+}
+
+model Job {
+  id                   String            @id
+  count                Int               @default(0)
+  done                 Int               @default(0)
+  note                 String?
+  value                Decimal           @default(0.00) @db.Decimal(10, 2)
+  shopName             String            @default("") @map("shop_name")
+  userId               BigInt?           @map("user_id")
+  status               String            @default("pending")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  finishedAt           DateTime?         @map("finished_at")
+  prefix               String?           @db.VarChar(4)
+  postfix              String?           @db.VarChar(4)
+  codeLength           Int?              @default(16) @map("code_length")
+  presetId             String?
+  expireDate           String?           @map("expire_date")
+  preset               Preset?           @relation(fields: [presetId], references: [id])
+  subscriptionPlanId   Int?              @map("subscription_plan_id")
+  customerIds          String?           @map("customer_ids")
+  scheduledTime        String?           @map("scheduled_time")
+  scheduledDate        String?           @map("scheduled_date")
+  scheduledTimezone    String?           @map("scheduledTimezone")
+  scheduledTimestamp   String?           @map("scheduled_timestamp")
+  scheduledMessage     String?           @map("scheduled_message")
+  errorMessage         String?           @map("error_message")
+  giftCardCurrency     String?           @map("gift_card_currency")
+  giftCards            Json[]            @default([]) @map("gift_cards")
+  usageLastRefreshedAt DateTime?         @map("usage_last_refreshed_at")
+  jobType              String            @default("create") @map("job_type")
+  sourceJobId          String?           @map("source_job_id")
+  deactivatedAt        DateTime?         @map("deactivated_at")
+  giftCardUsageRecords GiftCardUsage[]
+
+  @@index([shopName, status])
+  @@index([createdAt])
+}
+
+model Preset {
+  id               String   @id
+  name             String   @default("")
+  count            Int      @default(0)
+  note             String?
+  value            Decimal  @default(0.00) @db.Decimal(10, 2)
+  shopName         String   @default("") @map("shop_name")
+  prefix           String?  @db.VarChar(4)
+  postfix          String?  @db.VarChar(4)
+  codeLength       Int?     @default(16) @map("code_length")
+  createdAt        DateTime @default(now()) @map("created_at")
+  giftCardCurrency String?  @map("gift_card_currency")
+  jobs             Job[]
+}
+
+model GiftCardUsage {
+  id             String   @id @default(uuid())
+  jobId          String   @map("job_id")
+  giftCardId     String   @map("gift_card_id")
+  lastCharacters String   @map("last_characters")
+  initialValue   Decimal  @db.Decimal(10, 2) @map("initial_value")
+  currentBalance Decimal  @db.Decimal(10, 2) @map("current_balance")
+  amountRedeemed Decimal  @db.Decimal(10, 2) @map("amount_redeemed")
+  status         String
+  balanceStatus  String   @map("balance_status")
+  lastCheckedAt  DateTime @default(now()) @map("last_checked_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([giftCardId])
+  @@map("gift_card_usage")
+}
+
+model StoreCreditJob {
+  id                 String                    @id
+  shopName           String                    @map("shop_name")
+  userId             BigInt?                   @map("user_id")
+  status             String                    @default("pending")
+  amount             Decimal                   @db.Decimal(10, 2)
+  currency           String
+  expiresAt          DateTime?                 @map("expires_at")
+  notify             Boolean                   @default(true)
+  note               String?
+  customerIds        String                    @map("customer_ids")
+  count              Int                       @default(0)
+  done               Int                       @default(0)
+  failed             Int                       @default(0)
+  errorMessage       String?                   @map("error_message")
+  scheduledDate      String?                   @map("scheduled_date")
+  scheduledTime      String?                   @map("scheduled_time")
+  scheduledTimezone  String?                   @map("scheduled_timezone")
+  scheduledTimestamp String?                   @map("scheduled_timestamp")
+  scheduledMessage   String?                   @map("scheduled_message")
+  createdAt          DateTime                  @default(now()) @map("created_at")
+  finishedAt         DateTime?                 @map("finished_at")
+  recipients         StoreCreditJobRecipient[]
+
+  @@index([shopName, status])
+  @@index([createdAt])
+  @@index([status, scheduledTimestamp])
+  @@map("store_credit_job")
+}
+
+model StoreCreditJobRecipient {
+  id            String         @id @default(uuid())
+  jobId         String         @map("job_id")
+  customerId    String         @map("customer_id")
+  accountId     String?        @map("account_id")
+  transactionId String?        @map("transaction_id")
+  status        String         @default("pending")
+  errorMessage  String?        @map("error_message")
+  processedAt   DateTime?      @map("processed_at")
+  job           StoreCreditJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([customerId])
+  @@map("store_credit_job_recipient")
+}
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}

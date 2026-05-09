@@ -1,0 +1,30 @@
+client_id = "e03ca549970b7a0588ead8a78d5c0f70"
+name = "Datora | Bulk Gift Cards"
+application_url = "https://datora-gift-card-app-2777de0da91e.herokuapp.com/"
+embedded = true
+
+[access_scopes]
+scopes = "write_orders,write_products,write_gift_cards,read_customers"
+
+[auth]
+redirect_urls = [
+  "https://datora-gift-card-app-2777de0da91e.herokuapp.com/auth/callback",
+  "https://datora-gift-card-app-2777de0da91e.herokuapp.com/auth/shopify/callback",
+  "https://datora-gift-card-app-2777de0da91e.herokuapp.com/api/auth/callback",
+  "https://datora-gift-card-app-2777de0da91e.herokuapp.com/.shopify/graphiql/auth/callback"
+]
+
+[webhooks]
+api_version = "2023-10"
+
+  [webhooks.privacy_compliance]
+  customer_deletion_url = "https://datora-gift-card-app-2777de0da91e.herokuapp.com/webhooks/customer/redact"
+  customer_data_request_url = "https://datora-gift-card-app-2777de0da91e.herokuapp.com/webhooks/customer/CUSTOMERS_DATA_REQUEST"
+  shop_deletion_url = "https://datora-gift-card-app-2777de0da91e.herokuapp.com/webhooks/shop/redact"
+
+[pos]
+embedded = false
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "app-store-apps-furkan.myshopify.com"
