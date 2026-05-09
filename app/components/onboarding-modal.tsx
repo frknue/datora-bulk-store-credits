@@ -23,22 +23,22 @@ interface OnboardingStep {
 
 const STEPS: OnboardingStep[] = [
   {
-    title: "Welcome to Datora Bulk Gift Cards",
+    title: "Welcome to Datora Bulk Store Credits",
     content:
-      "Issue gift cards and store credit in bulk for your Shopify store. This quick tour shows what you can do with both features.",
+      "Issue store credit in bulk to your Shopify customers — and create gift cards too, when you need them. This quick tour shows the essentials.",
     image: imgFeature,
     primaryAction: { label: "Start tour", destination: null },
   },
   {
-    title: "Create gift cards in bulk",
+    title: "Issue store credit in bulk",
     content:
-      "Generate gift cards by quantity, value, and optional expiry. Add prefixes or postfixes, pick recipients from your customer list or a Shopify segment, and email codes immediately or on a schedule.",
+      "Credit one customer or a whole segment with a chosen amount, currency, and optional expiry. Send right away or schedule it for later — perfect for refunds, loyalty rewards, and win-back campaigns.",
     primaryAction: { label: "Next", destination: null },
   },
   {
-    title: "Issue store credit",
+    title: "Gift cards, when you need them",
     content:
-      "Credit one customer or a whole segment with a chosen amount, currency, and optional expiry. Send store credit right away or schedule it for later.",
+      "Generate gift cards by quantity, value, and optional expiry. Add prefixes or postfixes, pick recipients from your customer list or a Shopify segment, and email codes immediately or on a schedule.",
     primaryAction: { label: "Next", destination: null },
   },
   {
@@ -50,7 +50,7 @@ const STEPS: OnboardingStep[] = [
   {
     title: "Notifications and cleanup",
     content:
-      "Get a Slack ping when jobs finish or fail, and let the app auto-deactivate older completed jobs so unused codes don't linger. All in one settings page.",
+      "Get a Slack ping when jobs finish or fail, and let the app auto-deactivate older completed jobs so unused entries don't linger. All in one settings page.",
     primaryAction: { label: "Next", destination: null },
   },
   {
@@ -58,12 +58,12 @@ const STEPS: OnboardingStep[] = [
     content:
       "Pick where to start. You can replay this tour any time from the Help Center.",
     primaryAction: {
-      label: "Create gift cards",
-      destination: "/app/gift-cards/create",
-    },
-    secondaryAction: {
       label: "Issue store credit",
       destination: "/app/store-credit/create",
+    },
+    secondaryAction: {
+      label: "Create gift cards",
+      destination: "/app/gift-cards/create",
     },
   },
 ];

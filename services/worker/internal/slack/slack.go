@@ -18,7 +18,7 @@ func getAppHandle() string {
 	if h := os.Getenv("SHOPIFY_APP_HANDLE"); h != "" {
 		return h
 	}
-	return "datora-bulk-gift-cards-v2"
+	return "datora-bulk-store-credits"
 }
 
 // JobResult contains the information needed to format a Slack notification.

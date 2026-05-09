@@ -4,19 +4,20 @@ import type { AppOutletContext } from "../lib/types/app";
 
 export default function Help() {
   const { openOnboarding } = useOutletContext<AppOutletContext>();
-  const docsBase = "https://docs.datora.de/gift-card-app";
+  // TODO: point at the dedicated store-credits docs site once it's published.
+  const docsBase = "https://docs.datora.de/store-credits-app";
 
   const resources = [
     {
       heading: "Getting Started",
       description:
-        "Learn how to create your first gift card job, configure code options, and download your CSV export.",
+        "Learn how to issue your first store credit job — pick recipients, set amount and currency, and schedule delivery.",
       link: `${docsBase}/getting-started`,
     },
     {
       heading: "Features",
       description:
-        "Explore all features including code formatting, email delivery, job presets, usage tracking, and batch downloads.",
+        "Explore everything: bulk store credit, gift card creation, segment targeting, scheduled delivery, usage tracking, and CSV exports.",
       link: `${docsBase}/features/overview`,
     },
     {
@@ -28,7 +29,7 @@ export default function Help() {
     {
       heading: "FAQ",
       description:
-        "Find answers to common questions about gift card creation, downloads, job processing, and more.",
+        "Common questions about store credit issuance, gift card creation, downloads, and job processing.",
       link: `${docsBase}/faq`,
     },
     {
@@ -40,7 +41,7 @@ export default function Help() {
     {
       heading: "Troubleshooting",
       description:
-        "Solve common issues with jobs, downloads, gift cards not appearing, and other problems.",
+        "Solve common issues with jobs, downloads, store credit not appearing on customer accounts, and more.",
       link: `${docsBase}/troubleshooting`,
     },
   ];

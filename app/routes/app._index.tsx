@@ -110,15 +110,15 @@ function OverviewStatCards({
         <s-divider direction="block" />
         <s-box paddingBlock="small-400" paddingInline="small-100">
           <s-grid gap="small-300">
-            <s-heading>Gift Cards</s-heading>
-            <s-text>{formatNumber(giftAllTime, 0)}</s-text>
+            <s-heading>Store Credits</s-heading>
+            <s-text>{formatNumber(creditAllTime, 0)}</s-text>
           </s-grid>
         </s-box>
         <s-divider direction="block" />
         <s-box paddingBlock="small-400" paddingInline="small-100">
           <s-grid gap="small-300">
-            <s-heading>Store Credits</s-heading>
-            <s-text>{formatNumber(creditAllTime, 0)}</s-text>
+            <s-heading>Gift Cards</s-heading>
+            <s-text>{formatNumber(giftAllTime, 0)}</s-text>
           </s-grid>
         </s-box>
         <s-divider direction="block" />
@@ -188,7 +188,7 @@ function RecentActivityRow({ job }: { job: OverviewRecentJob }) {
   return (
     <s-table-row>
       <s-table-cell>
-        <s-badge tone={isCredit ? "info" : "success"}>{featureLabel}</s-badge>
+        <s-badge tone={isCredit ? "success" : "info"}>{featureLabel}</s-badge>
       </s-table-cell>
       <s-table-cell>
         <Link
@@ -264,42 +264,20 @@ export default function Overview() {
 
         <s-grid gridTemplateColumns="1fr 1fr" gap="base">
           <QuickActionCard
+            title="Issue store credit"
+            description="Credit one customer or a whole segment in bulk. Pick a currency, set an expiry, and send now or schedule for later."
+            buttonLabel="Issue store credit"
+            onClick={() => navigate("/app/store-credit/create")}
+          />
+          <QuickActionCard
             title="Create gift cards"
             description="Generate bulk gift cards with custom codes, values, and optional scheduled email delivery."
             buttonLabel="Create gift cards"
             onClick={() => navigate("/app/gift-cards/create")}
           />
-          <QuickActionCard
-            title="Issue store credit"
-            description="Credit one or many customers with store credit. Pick a currency, set an expiry, and send now or later."
-            buttonLabel="Issue store credit"
-            onClick={() => navigate("/app/store-credit/create")}
-          />
         </s-grid>
 
         <s-grid gridTemplateColumns="1fr 1fr" gap="base">
-          <s-stack direction="block" gap="small">
-            <s-stack
-              direction="inline"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <s-heading>Gift Cards — This Month</s-heading>
-              <s-button
-                variant="tertiary"
-                onClick={() => navigate("/app/gift-cards")}
-              >
-                Manage
-              </s-button>
-            </s-stack>
-            <DashboardUsageSection
-              totalGiftCardsThisMonth={giftMonthlyUsed}
-              planName={subscriptionPlan.name}
-              planMaxAmount={maxGiftCardsCap}
-              isUnlimited={giftCardsUnlimited}
-            />
-          </s-stack>
-
           <s-stack direction="block" gap="small">
             <s-stack
               direction="inline"
@@ -321,6 +299,28 @@ export default function Overview() {
               isUnlimited={storeCreditsUnlimited}
             />
           </s-stack>
+
+          <s-stack direction="block" gap="small">
+            <s-stack
+              direction="inline"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <s-heading>Gift Cards — This Month</s-heading>
+              <s-button
+                variant="tertiary"
+                onClick={() => navigate("/app/gift-cards")}
+              >
+                Manage
+              </s-button>
+            </s-stack>
+            <DashboardUsageSection
+              totalGiftCardsThisMonth={giftMonthlyUsed}
+              planName={subscriptionPlan.name}
+              planMaxAmount={maxGiftCardsCap}
+              isUnlimited={giftCardsUnlimited}
+            />
+          </s-stack>
         </s-grid>
 
         <s-section padding="none">
@@ -330,8 +330,8 @@ export default function Overview() {
           {recent.length === 0 ? (
             <s-box padding="base">
               <s-paragraph>
-                No jobs yet. Start by creating gift cards or issuing store
-                credit.
+                No jobs yet. Start by issuing store credit or creating gift
+                cards.
               </s-paragraph>
             </s-box>
           ) : (

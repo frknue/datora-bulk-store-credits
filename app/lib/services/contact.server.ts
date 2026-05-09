@@ -69,7 +69,7 @@ export async function sendContactMessage(
       <div class="email-container">
         <div class="header">
           <h2>New Message Received</h2>
-          <p>From Datora | Bulk Gift Cards App</p>
+          <p>From Datora | Bulk Store Credits App</p>
         </div>
         <div class="content">
           <p><strong>Subject:</strong> ${subject}</p>

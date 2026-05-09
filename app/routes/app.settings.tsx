@@ -116,13 +116,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: "Datora Bulk Gift Cards: Test notification successful!",
+          text: "Datora Bulk Store Credits: Test notification successful!",
           blocks: [
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: ":white_check_mark: *Test notification from Datora Bulk Gift Cards*\nYour Slack webhook is working correctly.",
+                text: ":white_check_mark: *Test notification from Datora Bulk Store Credits*\nYour Slack webhook is working correctly.",
               },
             },
           ],

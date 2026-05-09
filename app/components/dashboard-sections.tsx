@@ -315,8 +315,8 @@ export function DashboardCalloutCards({
 
       {showFeatureCard && (
         <DashboardCalloutCard
-          title="New Feature"
-          description="You can now mark several customers in the Shopify customer overview and then send them a customized gift card by email directly using the admin link 'Send gift cards by email'."
+          title="New: bulk store credit"
+          description="Issue store credit to one customer or a whole Shopify segment in one go. Pick a currency, set an optional expiry, and send now or schedule for later."
           buttonLabel={featureButtonLabel}
           buttonHref={featureButtonHref}
           imageSrc={imgFeature}

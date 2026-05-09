@@ -1,4 +1,4 @@
-app = 'datora-bulk-gift-cards-worker'
+app = 'datora-bulk-store-credits-worker'
 primary_region = 'fra'
 kill_signal = 'SIGTERM'
 kill_timeout = '35s'
@@ -25,7 +25,7 @@ kill_timeout = '35s'
   cpus = 1
 
 [env]
-  SHOPIFY_APP_HANDLE = "datora-bulk-gift-cards-v2"
+  SHOPIFY_APP_HANDLE = "datora-bulk-store-credits"
 
 [deploy]
   strategy = "rolling"

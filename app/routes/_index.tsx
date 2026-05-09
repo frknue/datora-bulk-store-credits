@@ -17,7 +17,7 @@ export default function App() {
 
   return (
     <div style={{ padding: "2rem", fontFamily: "Inter, sans-serif" }}>
-      <h1>Datora | Bulk Gift Cards</h1>
+      <h1>Datora | Bulk Store Credits</h1>
       <p>Install this app from the Shopify Admin to get started.</p>
       {showForm && (
         <Form method="post" action="/auth/login">

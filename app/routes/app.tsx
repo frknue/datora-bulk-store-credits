@@ -136,8 +136,8 @@ export default function App() {
         <s-link href="/app" {...{ rel: "home" }}>
           Home
         </s-link>
-        <s-link href="/app/gift-cards">Gift Cards</s-link>
         <s-link href="/app/store-credit">Store Credits</s-link>
+        <s-link href="/app/gift-cards">Gift Cards</s-link>
         <s-link href="/app/subscriptions">Subscriptions</s-link>
         <s-link href="/app/faq">Help</s-link>
         <s-link href="/app/changelog">Changelog</s-link>
