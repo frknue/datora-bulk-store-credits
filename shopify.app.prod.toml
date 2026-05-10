@@ -1,3 +1,5 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
 client_id = "34f8dafae7ab14cad1c54dc169b44ca4"
 name = "Datora | Bulk Store Credits"
 application_url = "https://datora-bulk-store-credits.fly.dev"
@@ -5,14 +7,6 @@ embedded = true
 
 [webhooks]
 api_version = "2026-01"
-
-  [[webhooks.subscriptions]]
-  topics = [ "app/uninstalled" ]
-  uri = "/webhooks/app/uninstalled"
-
-  [[webhooks.subscriptions]]
-  topics = [ "app/scopes_update" ]
-  uri = "/webhooks/app/scopes_update"
 
   [[webhooks.subscriptions]]
   uri = "/webhooks/customer/data-request"
@@ -26,8 +20,20 @@ api_version = "2026-01"
   uri = "/webhooks/shop/redact"
   compliance_topics = [ "shop/redact" ]
 
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
 [access_scopes]
-scopes = "read_customers,read_gift_cards,write_customers,write_gift_card_transactions,write_gift_cards,read_store_credit_accounts,write_store_credit_account_transactions,read_store_credit_account_transactions"
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers,read_gift_cards,read_store_credit_account_transactions,read_store_credit_accounts,write_customers,write_gift_card_transactions,write_gift_cards,write_store_credit_account_transactions"
 
 [auth]
 redirect_urls = [ "https://datora-bulk-store-credits.fly.dev/auth/callback" ]
+
+[build]
+automatically_update_urls_on_dev = true
