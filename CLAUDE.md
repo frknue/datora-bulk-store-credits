@@ -119,7 +119,7 @@ TODO: set after creating the "Datora | Bulk Store Credits | Dev" Partner app and
 Production app URL (deployed):
 
 ```text
-TODO: set after deploying to Fly.io and installing the production "Datora | Bulk Store Credits" app.
+https://datora-bulk-store-credits.fly.dev
 ```
 
 ### Why This Flow
@@ -142,7 +142,7 @@ TODO: set after deploying to Fly.io and installing the production "Datora | Bulk
 - Embedded app name: `Datora | Bulk Store Credits`
 - Shopify config: `shopify.app.dev.toml` (dev), `shopify.app.prod.toml` (prod)
 - Dev app URL: TODO — fill in after the dev Partner app is created
-- Production app URL: TODO — fill in after deploy
+- Production app URL: https://datora-bulk-store-credits.fly.dev
 - Sibling app for reference: `/Users/furkanulker/git/work/datora_gift_card_app_v2` (the gift card app this was forked from)
 
 ## Infrastructure
