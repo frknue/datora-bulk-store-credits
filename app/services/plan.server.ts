@@ -85,7 +85,15 @@ export function getFeatureMinimumPlan(
   return featureMinimumPlans[featureId];
 }
 
+// While the app is awaiting review or otherwise pre-launch, force test billing
+// for every shop. Set BILLING_LIVE=true in production once the listing is
+// approved and real charges should be made.
+const billingLive = process.env.BILLING_LIVE === "true";
+
 export function isTestShop(shop: string): boolean {
+  if (!billingLive) {
+    return true;
+  }
   return TEST_STORES.includes(shop);
 }
 
