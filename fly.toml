@@ -38,17 +38,22 @@ kill_timeout = '35s'
     timeout = "3s"
     path = "/health"
 
-# Worker: health check only (not publicly exposed, reachable via internal network)
-[[checks]]
-  name = "worker-health"
-  port = 8080
-  type = "http"
-  interval = "15s"
-  timeout = "3s"
-  grace_period = "10s"
-  method = "GET"
-  path = "/health"
+# Worker: internal-only service (no ports block = not publicly exposed),
+# but declared as a service so auto_start_machines / min_machines_running apply.
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
   processes = ["worker"]
+  auto_start_machines = true
+  auto_stop_machines = "off"
+  min_machines_running = 1
+
+  [[services.http_checks]]
+    interval = "15s"
+    timeout = "3s"
+    grace_period = "10s"
+    method = "get"
+    path = "/health"
 
 # Web machines
 [[vm]]
