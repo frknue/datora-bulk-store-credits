@@ -223,8 +223,8 @@ func processJobAsync(jobID, shopName, dbURL, redisURL, serviceUrl, presharedKey,
 		return
 	}
 
-	// Retrieve the Shopify auth token.
-	token, err := db.GetShopifyAuthToken(ctx, sqlDB, shopName)
+	// Retrieve the Shopify auth token, refreshing it if it has expired.
+	token, err := shopify.GetValidAccessToken(ctx, sqlDB, shopName)
 	if err != nil || token == "" {
 		log.Printf("Shopify token is missing for job %s", jobID)
 		markJobFailed(ctx, sqlDB, jobID, "Shopify access token not found for this shop")

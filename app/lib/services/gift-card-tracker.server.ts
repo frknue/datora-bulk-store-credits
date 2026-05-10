@@ -1,4 +1,5 @@
 import prisma from "../../db.server";
+import { unauthenticated } from "../../shopify.server";
 import { GIFT_CARDS_QUERY, SEARCH_GIFT_CARDS_QUERY } from "../graphql/admin";
 import { decryptGiftCard } from "../utils/encryption.server";
 
@@ -331,48 +332,10 @@ async function runGiftCardUsageTracking(
 export async function createShopAdminGraphqlClient(
   shopName: string,
 ): Promise<GraphqlClient> {
-  const session =
-    (await prisma.session.findFirst({
-      where: {
-        shop: shopName,
-        isOnline: false,
-        accessToken: { not: "" },
-      },
-    })) ||
-    (await prisma.session.findFirst({
-      where: {
-        shop: shopName,
-        accessToken: { not: "" },
-      },
-      orderBy: {
-        expires: "desc",
-      },
-    }));
-
-  if (!session?.accessToken) {
-    throw new Error(`No access token found for shop ${shopName}`);
-  }
-
+  const { admin } = await unauthenticated.admin(shopName);
   return {
     graphql: async (query, options) => {
-      const response = await fetch(`https://${shopName}/admin/api/2026-01/graphql.json`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Access-Token": session.accessToken,
-        },
-        body: JSON.stringify({
-          query,
-          variables: options?.variables ?? {},
-        }),
-      });
-
-      if (!response.ok) {
-        const body = await response.text();
-        throw new Error(`Shopify GraphQL request failed (${response.status}): ${body}`);
-      }
-
-      return response;
+      return admin.graphql(query, { variables: options?.variables });
     },
   };
 }

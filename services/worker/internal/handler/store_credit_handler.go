@@ -117,7 +117,7 @@ func processAlreadyClaimedStoreCreditJob(ctx context.Context, sqlDB *sql.DB, cla
 
 	writeStoreCreditProgress(ctx, rdb, progressKey, 0, claimed.Count, "running")
 
-	accessToken, err := resolveShopAccessToken(ctx, sqlDB, shop)
+	accessToken, err := shopify.GetValidAccessToken(ctx, sqlDB, shop)
 	if err != nil {
 		markStoreCreditJobFailed(ctx, sqlDB, jobID, fmt.Sprintf("auth: %v", err))
 		return err
@@ -137,15 +137,34 @@ func processAlreadyClaimedStoreCreditJob(ctx context.Context, sqlDB *sql.DB, cla
 			ueErrs  []shopify.StoreCreditUserError
 			callErr error
 		)
-		for attempt := 0; attempt < storeCreditMaxRetries; attempt++ {
+		attempt := 0
+		authRetried := false
+		for {
 			res, ueErrs, callErr = shopify.IssueStoreCredit(
 				ctx, shop, accessToken, gid,
 				claimed.Amount, claimed.Currency, expiresAt, claimed.Notify,
 			)
-			if callErr == nil || !isTransientStoreCreditError(callErr) {
+			if callErr == nil {
+				break
+			}
+			if shopify.IsAuthError(callErr) && !authRetried {
+				authRetried = true
+				newToken, refreshErr := shopify.ForceRefreshAccessToken(ctx, sqlDB, shop, accessToken)
+				if refreshErr != nil {
+					callErr = fmt.Errorf("auth refresh: %w", refreshErr)
+					break
+				}
+				accessToken = newToken
+				continue
+			}
+			if !isTransientStoreCreditError(callErr) {
+				break
+			}
+			if attempt >= storeCreditMaxRetries-1 {
 				break
 			}
 			time.Sleep(storeCreditRetryBaseBackoff * (1 << attempt))
+			attempt++
 		}
 
 		if callErr != nil {
@@ -228,24 +247,3 @@ func markStoreCreditJobFailed(ctx context.Context, sqlDB *sql.DB, jobID, msg str
 	`, msg, jobID)
 }
 
-// resolveShopAccessToken fetches the offline access token from the Session table
-// used by the React Router Shopify adapter. Called resolveShopAccessToken rather
-// than resolveAccessToken to avoid collision with any future helper.
-func resolveShopAccessToken(ctx context.Context, sqlDB *sql.DB, shop string) (string, error) {
-	var token string
-	if err := sqlDB.QueryRowContext(ctx, `
-		SELECT "accessToken" FROM "Session"
-		WHERE shop = $1 AND "isOnline" = false
-		ORDER BY "expires" IS NULL DESC, "expires" DESC
-		LIMIT 1
-	`, shop).Scan(&token); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return "", fmt.Errorf("no offline session for %s", shop)
-		}
-		return "", err
-	}
-	if token == "" {
-		return "", errors.New("empty access token")
-	}
-	return token, nil
-}

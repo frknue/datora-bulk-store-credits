@@ -240,32 +240,6 @@ func FetchJob(ctx context.Context, db *sql.DB, jobID string) (*models.JobData, e
 	return &job, nil
 }
 
-// GetShopifyAuthToken retrieves the access token for a given shop.
-func GetShopifyAuthToken(ctx context.Context, db *sql.DB, shop string) (string, error) {
-	query := `
-        SELECT "accessToken", "expires"
-        FROM public."Session"
-        WHERE "shop" = $1
-        ORDER BY "expires" IS NULL DESC, "expires" DESC
-    `
-	rows, err := db.QueryContext(ctx, query, shop)
-	if err != nil {
-		return "", err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		var accessToken string
-		var expires sql.NullString // you can handle the expires field as needed
-		if err := rows.Scan(&accessToken, &expires); err != nil {
-			return "", err
-		}
-		return accessToken, nil
-	}
-
-	return "", fmt.Errorf("no access token found for shop %s", shop)
-}
-
 // ChangeJobStatus updates the status (and possibly the finished_at time) of a job.
 func ChangeJobStatus(ctx context.Context, db *sql.DB, jobID string, status string) error {
 	// Use parameterized queries to avoid SQL injection.
