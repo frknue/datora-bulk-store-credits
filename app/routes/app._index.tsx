@@ -240,6 +240,7 @@ export default function Overview() {
   const maxStoreCreditsCap = subscriptionPlan.maxStoreCredits;
   const giftCardsUnlimited = maxGiftCardsCap === -1;
   const storeCreditsUnlimited = maxStoreCreditsCap === -1;
+  const giftCardsAvailable = maxGiftCardsCap !== 0;
   const totalIssuedAllTime = giftAllTime + creditAllTime;
   const activeJobs = giftRunning + giftPending + creditRunning + creditPending;
 
@@ -262,22 +263,30 @@ export default function Overview() {
           planName={subscriptionPlan.name}
         />
 
-        <s-grid gridTemplateColumns="1fr 1fr" gap="base">
+        <s-grid
+          gridTemplateColumns={giftCardsAvailable ? "1fr 1fr" : "1fr"}
+          gap="base"
+        >
           <QuickActionCard
             title="Issue store credit"
             description="Credit one customer or a whole segment in bulk. Pick a currency, set an expiry, and send now or schedule for later."
             buttonLabel="Issue store credit"
             onClick={() => navigate("/app/store-credit/create")}
           />
-          <QuickActionCard
-            title="Create gift cards"
-            description="Generate bulk gift cards with custom codes, values, and optional scheduled email delivery."
-            buttonLabel="Create gift cards"
-            onClick={() => navigate("/app/gift-cards/create")}
-          />
+          {giftCardsAvailable && (
+            <QuickActionCard
+              title="Create gift cards"
+              description="Generate bulk gift cards with custom codes, values, and optional scheduled email delivery."
+              buttonLabel="Create gift cards"
+              onClick={() => navigate("/app/gift-cards/create")}
+            />
+          )}
         </s-grid>
 
-        <s-grid gridTemplateColumns="1fr 1fr" gap="base">
+        <s-grid
+          gridTemplateColumns={giftCardsAvailable ? "1fr 1fr" : "1fr"}
+          gap="base"
+        >
           <s-stack direction="block" gap="small">
             <s-stack
               direction="inline"
@@ -300,27 +309,29 @@ export default function Overview() {
             />
           </s-stack>
 
-          <s-stack direction="block" gap="small">
-            <s-stack
-              direction="inline"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <s-heading>Gift Cards — This Month</s-heading>
-              <s-button
-                variant="tertiary"
-                onClick={() => navigate("/app/gift-cards")}
+          {giftCardsAvailable && (
+            <s-stack direction="block" gap="small">
+              <s-stack
+                direction="inline"
+                justifyContent="space-between"
+                alignItems="center"
               >
-                Manage
-              </s-button>
+                <s-heading>Gift Cards — This Month</s-heading>
+                <s-button
+                  variant="tertiary"
+                  onClick={() => navigate("/app/gift-cards")}
+                >
+                  Manage
+                </s-button>
+              </s-stack>
+              <DashboardUsageSection
+                totalGiftCardsThisMonth={giftMonthlyUsed}
+                planName={subscriptionPlan.name}
+                planMaxAmount={maxGiftCardsCap}
+                isUnlimited={giftCardsUnlimited}
+              />
             </s-stack>
-            <DashboardUsageSection
-              totalGiftCardsThisMonth={giftMonthlyUsed}
-              planName={subscriptionPlan.name}
-              planMaxAmount={maxGiftCardsCap}
-              isUnlimited={giftCardsUnlimited}
-            />
-          </s-stack>
+          )}
         </s-grid>
 
         <s-section padding="none">

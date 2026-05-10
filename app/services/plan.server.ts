@@ -18,7 +18,8 @@ type PlanFeatureId =
   | "duplicate-jobs"
   | "job-presets"
   | "premium-support"
-  | "usage-tracking";
+  | "usage-tracking"
+  | "gift-cards";
 type PlanLimitId = "maxGiftCards" | "maxStoreCredits" | "jobs" | "downloadDays";
 
 const featureMinimumPlans: Record<PlanFeatureId, SubscriptionPlan["name"]> = {
@@ -29,6 +30,7 @@ const featureMinimumPlans: Record<PlanFeatureId, SubscriptionPlan["name"]> = {
   "job-presets": "Premium",
   "premium-support": "Premium",
   "usage-tracking": "Premium",
+  "gift-cards": "Basic",
 };
 
 const planServiceCache = new WeakMap<AppRequest, PlanService>();
@@ -52,6 +54,8 @@ export function hasPlanFeature(
       return plan.support;
     case "usage-tracking":
       return plan.id >= 3;
+    case "gift-cards":
+      return plan.maxGiftCards !== 0;
     default:
       return false;
   }
@@ -207,6 +211,10 @@ export class PlanService {
 
   public async canUseUsageTracking(): Promise<boolean> {
     return this.hasFeature("usage-tracking");
+  }
+
+  public async canAccessGiftCards(): Promise<boolean> {
+    return this.hasFeature("gift-cards");
   }
 
   public getFeatureMinimumPlan(featureId: PlanFeatureId): SubscriptionPlan["name"] {

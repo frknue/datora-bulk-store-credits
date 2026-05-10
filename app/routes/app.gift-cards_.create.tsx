@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLoaderData, useOutletContext } from "react-router";
+import { redirect, useLoaderData, useOutletContext } from "react-router";
 import {
   CreateJobCustomerBanner,
   CreateJobDetailsSection,
@@ -11,6 +11,7 @@ import {
 } from "../components/create-job-sections";
 import { AppPageFooter } from "../components/app-page-footer";
 import { authenticate } from "../shopify.server";
+import { getPlanFromBilling } from "../services/plan.server";
 import { useCreateJobForm } from "../lib/hooks/use-create-job-form";
 import { loadCreateJobPageData } from "../lib/services/create-job-page.server";
 import { createJobCodeLengthOptions } from "../lib/utils/create-job";
@@ -23,7 +24,11 @@ type SelectedCustomer = Pick<StoreCreditPickerCustomer, "id" | "name" | "email">
 type SelectedSegment = Pick<StoreCreditPickerSegment, "id" | "name" | "count">;
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { billing, session } = await authenticate.admin(request);
+  const plan = await getPlanFromBilling(billing, session.shop);
+  if (plan.maxGiftCards === 0) {
+    throw redirect("/app/subscriptions");
+  }
   const url = new URL(request.url);
   const extensionCustomerIds = url.searchParams.get("customerIds") || "";
   return loadCreateJobPageData(session.shop, extensionCustomerIds);

@@ -16,7 +16,9 @@ import {
   DashboardUsageSection,
 } from "../components/dashboard-sections";
 import { AppPageFooter } from "../components/app-page-footer";
+import { redirect } from "react-router";
 import { authenticate } from "../shopify.server";
+import { getPlanFromBilling } from "../services/plan.server";
 import { useJobLifecycleActions } from "../lib/hooks/use-job-lifecycle-actions";
 import { useJobProgressPolling } from "../lib/hooks/use-job-progress-polling";
 import {
@@ -32,7 +34,11 @@ import type { DashboardJob } from "../lib/types/jobs";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { billing, session } = await authenticate.admin(request);
+  const plan = await getPlanFromBilling(billing, session.shop);
+  if (plan.maxGiftCards === 0) {
+    throw redirect("/app/subscriptions");
+  }
   const url = new URL(request.url);
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
   return loadDashboardPageData(session.shop, page);
