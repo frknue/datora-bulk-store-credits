@@ -1,5 +1,4 @@
-# TODO: replace client_id with the new "Datora | Bulk Store Credits" Partner app id (run `shopify app config link`)
-client_id = ""
+client_id = "34f8dafae7ab14cad1c54dc169b44ca4"
 name = "Datora | Bulk Store Credits"
 application_url = "https://datora-bulk-store-credits.fly.dev"
 embedded = true
