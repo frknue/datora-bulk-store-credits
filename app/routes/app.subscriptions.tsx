@@ -96,17 +96,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 };
 
-const formatMonthlyLimit = (value: number) =>
-  value === -1 ? "Unlimited" : value.toLocaleString();
+const formatMonthlyLimit = (value: number) => {
+  if (value === -1) return "Unlimited";
+  if (value === 0) return "Not available";
+  return value.toLocaleString();
+};
 
 const limits: { label: string; getValue: (p: SubscriptionPlan) => string }[] = [
   {
-    label: "Max Gift Cards",
-    getValue: (p) => formatMonthlyLimit(p.maxGiftCards),
-  },
-  {
     label: "Max Store Credits",
     getValue: (p) => formatMonthlyLimit(p.maxStoreCredits),
+  },
+  {
+    label: "Max Gift Cards",
+    getValue: (p) => formatMonthlyLimit(p.maxGiftCards),
   },
   {
     label: "Running Jobs",
@@ -119,10 +122,11 @@ const limits: { label: string; getValue: (p: SubscriptionPlan) => string }[] = [
 ];
 
 const features: { label: string; check: (p: SubscriptionPlan) => boolean }[] = [
+  { label: "Store Credit Issuance", check: () => true },
+  { label: "Gift Card Creation", check: (p) => p.maxGiftCards !== 0 },
   { label: "Download CSV", check: () => true },
   { label: "Code Formatter", check: (p) => p.formatter },
   { label: "Send by Email", check: (p) => p.extension },
-  { label: "Store Credit Issuance", check: (p) => p.extension },
   { label: "Duplicate Jobs", check: (p) => p.duplicate },
   { label: "Job Presets", check: (p) => p.presets },
   { label: "Usage Tracking", check: (p) => p.usageTracking },
