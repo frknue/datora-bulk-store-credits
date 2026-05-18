@@ -67,6 +67,7 @@ export function DownloadForm({
   const [uppercase, setUppercase] = useState(false);
   const [splitter, setSplitter] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const canFormat = subscriptionPlan.formatter;
 
@@ -148,10 +149,14 @@ export function DownloadForm({
     setLoading(false);
 
     if (result.success) {
+      setDownloadError(null);
       shopify.toast.show("Download started");
       navigate(backHref);
     } else {
-      shopify.toast.show("Download failed", { isError: true });
+      setDownloadError(
+        result.message ??
+          "Couldn't prepare your download. Please try again in a moment.",
+      );
     }
   }, [
     mode,
@@ -170,6 +175,10 @@ export function DownloadForm({
     <s-stack direction="block" gap="base">
       <s-section padding="base">
         <s-stack direction="block" gap="base">
+          {downloadError && (
+            <s-banner tone="critical">{downloadError}</s-banner>
+          )}
+
           <s-select
             label="Separator"
             value={delimiter}

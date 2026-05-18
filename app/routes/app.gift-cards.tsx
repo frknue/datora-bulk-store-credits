@@ -86,10 +86,17 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { activeAction, cancelJob, retryJob, deactivateJob, resumeJob } =
-    useJobLifecycleActions({
-      onSuccess: () => navigate(".", { replace: true }),
-    });
+  const {
+    activeAction,
+    actionError,
+    clearActionError,
+    cancelJob,
+    retryJob,
+    deactivateJob,
+    resumeJob,
+  } = useJobLifecycleActions({
+    onSuccess: () => navigate(".", { replace: true }),
+  });
 
   const runningJobs = jobs.filter(
     (j) => j.status === "running" || j.status === "pending",
@@ -238,6 +245,12 @@ export default function Dashboard() {
       </s-button>
 
       <s-stack direction="block" gap="base">
+        {actionError && (
+          <s-banner tone="critical" dismissible onDismiss={clearActionError}>
+            {actionError}
+          </s-banner>
+        )}
+
         {/* Plan limit warning */}
         {isAtLimit && (
           <s-banner tone="warning">

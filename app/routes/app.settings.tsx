@@ -175,6 +175,11 @@ export default function Settings() {
     url: initialWebhookUrl,
   });
 
+  const [deactivationError, setDeactivationError] = useState<string | null>(
+    null,
+  );
+  const [slackError, setSlackError] = useState<string | null>(null);
+
   const isDeactivationDirty =
     deactivateEnabled !== deactivationBaseline.enabled ||
     days !== deactivationBaseline.days;
@@ -215,9 +220,12 @@ export default function Settings() {
     const data = deactivationFetcher.data;
     if (data.success && data.intent === "saveAutoDeactivation") {
       setDeactivationBaseline({ enabled: deactivateEnabled, days });
+      setDeactivationError(null);
       shopify.toast.show("Settings saved");
     } else if (!data.success && data.intent === "saveAutoDeactivation") {
-      shopify.toast.show(data.error ?? "Save failed", { isError: true });
+      setDeactivationError(
+        data.error ?? "Couldn't save auto-deactivation settings.",
+      );
     }
   }, [
     deactivationFetcher.state,
@@ -232,9 +240,12 @@ export default function Settings() {
     const data = slackFetcher.data;
     if (data.success && data.intent === "saveSlackWebhook") {
       setSlackBaseline({ enabled: slackEnabled, url: webhookUrl });
+      setSlackError(null);
       shopify.toast.show("Settings saved");
     } else if (!data.success && data.intent === "saveSlackWebhook") {
-      shopify.toast.show(data.error ?? "Save failed", { isError: true });
+      setSlackError(
+        data.error ?? "Couldn't save Slack notification settings.",
+      );
     }
   }, [
     slackFetcher.state,
@@ -247,9 +258,10 @@ export default function Settings() {
   useEffect(() => {
     if (!testFetcher.data) return;
     if (testFetcher.data.success) {
+      setSlackError(null);
       shopify.toast.show("Test sent");
     } else if (testFetcher.data.error) {
-      shopify.toast.show("Test failed", { isError: true });
+      setSlackError(testFetcher.data.error);
     }
   }, [testFetcher.data, shopify]);
 
@@ -310,6 +322,8 @@ export default function Settings() {
     setDays(deactivationBaseline.days);
     setSlackEnabled(slackBaseline.enabled);
     setWebhookUrl(slackBaseline.url);
+    setDeactivationError(null);
+    setSlackError(null);
   }, [deactivationBaseline, slackBaseline]);
 
   return (
@@ -353,6 +367,9 @@ export default function Settings() {
               <s-grid-item>
                 <s-section>
                   <s-stack gap="base">
+                    {deactivationError && (
+                      <s-banner tone="critical">{deactivationError}</s-banner>
+                    )}
                     <s-checkbox
                       label="Enable auto-deactivation"
                       checked={deactivateEnabled || undefined}
@@ -411,6 +428,9 @@ export default function Settings() {
                 <s-section>
                   {canSlack ? (
                     <s-stack gap="base">
+                      {slackError && (
+                        <s-banner tone="critical">{slackError}</s-banner>
+                      )}
                       <s-checkbox
                         label="Enable Slack notifications"
                         checked={slackEnabled || undefined}

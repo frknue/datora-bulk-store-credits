@@ -100,5 +100,42 @@ export function validateCreateStoreCreditJobInput(
     });
   }
 
+  if (input.expireDate) {
+    const expireDate = new Date(input.expireDate);
+    if (Number.isNaN(expireDate.getTime()) || expireDate <= new Date()) {
+      errors.push({
+        field: "expireDate",
+        message: "Expire date must be in the future",
+      });
+    }
+  }
+
+  const schedulingRequested = Boolean(
+    input.scheduledDate ||
+      input.scheduledTime ||
+      input.scheduledTimezone ||
+      input.scheduledMessage,
+  );
+  if (schedulingRequested) {
+    if (!input.scheduledDate) {
+      errors.push({
+        field: "scheduledDate",
+        message: "Scheduled date is required",
+      });
+    }
+    if (!input.scheduledTime) {
+      errors.push({
+        field: "scheduledTime",
+        message: "Scheduled time is required",
+      });
+    }
+    if (!input.scheduledTimezone) {
+      errors.push({
+        field: "scheduledTimezone",
+        message: "Scheduled timezone is required",
+      });
+    }
+  }
+
   return errors;
 }

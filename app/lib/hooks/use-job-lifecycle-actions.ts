@@ -22,7 +22,10 @@ export function useJobLifecycleActions(options: UseJobLifecycleActionsOptions = 
   const { onSuccess } = options;
   const shopify = useAppBridge();
   const [activeAction, setActiveAction] = useState<JobLifecycleActionState | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const cancelSettleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearActionError = useCallback(() => setActionError(null), []);
 
   useEffect(() => {
     return () => {
@@ -36,6 +39,7 @@ export function useJobLifecycleActions(options: UseJobLifecycleActionsOptions = 
   const runAction = useCallback(
     async (jobId: string, intent: JobLifecycleIntent) => {
       setActiveAction({ jobId, intent });
+      setActionError(null);
       shopify.loading(true);
 
       const successMessages: Record<JobLifecycleIntent, string> = {
@@ -45,10 +49,10 @@ export function useJobLifecycleActions(options: UseJobLifecycleActionsOptions = 
         resume: "Resuming",
       };
       const failureMessages: Record<JobLifecycleIntent, string> = {
-        retry: "Retry failed",
-        cancel: "Cancel failed",
-        deactivate: "Deactivate failed",
-        resume: "Resume failed",
+        retry: "Couldn't retry the job. Please try again.",
+        cancel: "Couldn't cancel the job. Please try again.",
+        deactivate: "Couldn't deactivate the job. Please try again.",
+        resume: "Couldn't resume the job. Please try again.",
       };
 
       try {
@@ -70,7 +74,7 @@ export function useJobLifecycleActions(options: UseJobLifecycleActionsOptions = 
           } catch {
             // Body wasn't JSON or couldn't be read — fall back to the generic message.
           }
-          shopify.toast.show(errorMessage, { isError: true });
+          setActionError(errorMessage);
           return false;
         }
 
@@ -94,7 +98,7 @@ export function useJobLifecycleActions(options: UseJobLifecycleActionsOptions = 
         return true;
       } catch (error) {
         console.error(`Error performing ${intent} for job ${jobId}:`, error);
-        shopify.toast.show(failureMessages[intent], { isError: true });
+        setActionError(failureMessages[intent]);
         return false;
       } finally {
         setActiveAction(null);
@@ -106,6 +110,8 @@ export function useJobLifecycleActions(options: UseJobLifecycleActionsOptions = 
 
   return {
     activeAction,
+    actionError,
+    clearActionError,
     cancelJob: (jobId: string) => runAction(jobId, "cancel"),
     retryJob: (jobId: string) => runAction(jobId, "retry"),
     deactivateJob: (jobId: string) => runAction(jobId, "deactivate"),

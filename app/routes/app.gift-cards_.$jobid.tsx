@@ -94,10 +94,17 @@ export default function JobDetails() {
   const { subscriptionPlan, shopCurrency } = useOutletContext<AppOutletContext>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { activeAction, cancelJob, retryJob, deactivateJob, resumeJob } =
-    useJobLifecycleActions({
-      onSuccess: () => navigate(".", { replace: true }),
-    });
+  const {
+    activeAction,
+    actionError,
+    clearActionError,
+    cancelJob,
+    retryJob,
+    deactivateJob,
+    resumeJob,
+  } = useJobLifecycleActions({
+    onSuccess: () => navigate(".", { replace: true }),
+  });
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
 
   const cardPage = Math.max(1, parseInt(searchParams.get("cardPage") || "1", 10));
@@ -324,6 +331,12 @@ export default function JobDetails() {
       />
 
       <s-stack direction="block" gap="base">
+        {actionError && (
+          <s-banner tone="critical" dismissible onDismiss={clearActionError}>
+            {actionError}
+          </s-banner>
+        )}
+
         {isRunning && (
           <JobRunningProgressBanner
             done={done}

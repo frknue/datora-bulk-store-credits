@@ -226,6 +226,7 @@ export default function Subscriptions() {
   const { subscriptionPlan } = useOutletContext<AppOutletContext>();
 
   const [isChangingPlan, setIsChangingPlan] = useState(false);
+  const [planError, setPlanError] = useState<string | null>(null);
   const cancelPlanFetcher = useFetcher<typeof action>();
   const loading = isChangingPlan || cancelPlanFetcher.state !== "idle";
   const cancelModalRef = useRef<
@@ -240,12 +241,15 @@ export default function Subscriptions() {
     }
 
     if (response.success) {
+      setPlanError(null);
       shopify.toast.show("Subscription cancelled");
       window.location.reload();
       return;
     }
 
-    shopify.toast.show("Cancel failed", { isError: true });
+    setPlanError(
+      "Couldn't cancel your subscription. Please try again or contact support.",
+    );
   }, [cancelPlanFetcher.data, cancelPlanFetcher.state, shopify]);
 
   const handlePlanChange = useCallback(
@@ -258,6 +262,7 @@ export default function Subscriptions() {
       }
 
       setIsChangingPlan(true);
+      setPlanError(null);
       try {
         const idToken = await shopify.idToken();
         const response = await fetch("/app/subscriptions", {
@@ -285,9 +290,13 @@ export default function Subscriptions() {
           return;
         }
 
-        shopify.toast.show("Change failed", { isError: true });
+        setPlanError(
+          `Couldn't change to the ${plan.name} plan. Please try again.`,
+        );
       } catch {
-        shopify.toast.show("Change failed", { isError: true });
+        setPlanError(
+          `Couldn't change to the ${plan.name} plan. Check your connection and try again.`,
+        );
       } finally {
         setIsChangingPlan(false);
       }
@@ -307,6 +316,8 @@ export default function Subscriptions() {
       </s-link>
 
       <s-stack direction="block" gap="base">
+        {planError && <s-banner tone="critical">{planError}</s-banner>}
+
         <s-grid
           gridTemplateColumns="@container (inline-size <= 900px) 1fr, 1fr 1fr 1fr 1fr"
           gap="base"

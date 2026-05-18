@@ -6,6 +6,7 @@ import { authenticate } from "../shopify.server";
 import {
   STORE_CREDIT_SUPPORTED_CURRENCIES,
   STORE_CREDIT_RULES,
+  validateCreateStoreCreditJobInput,
   type CreateStoreCreditJobBody,
 } from "../../shared/store-credit";
 import { timezoneLabels } from "../lib/utils/timezone";
@@ -80,6 +81,8 @@ export default function CreateStoreCreditJob() {
   const [scheduledMessage, setScheduledMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [recipientsError, setRecipientsError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const openCustomerPicker = useCallback(() => {
     setPickerQuery("");
@@ -98,6 +101,7 @@ export default function CreateStoreCreditJob() {
   const confirmCustomerSelection = useCallback(() => {
     setSelectedCustomers(pendingSelected);
     setErrorMessage(null);
+    setRecipientsError(null);
     closeCustomerPicker();
   }, [pendingSelected, closeCustomerPicker]);
 
@@ -187,6 +191,7 @@ export default function CreateStoreCreditJob() {
   const confirmSegmentSelection = useCallback(() => {
     setSelectedSegments(pendingSegments);
     setErrorMessage(null);
+    setRecipientsError(null);
     closeSegmentPicker();
   }, [pendingSegments, closeSegmentPicker]);
 
@@ -294,37 +299,61 @@ export default function CreateStoreCreditJob() {
     setScheduledTimezone("");
     setScheduledMessage("");
     setErrorMessage(null);
+    setRecipientsError(null);
+    setFieldErrors({});
   }, []);
 
   async function handleSubmit() {
     setErrorMessage(null);
-    if (selectedCustomers.length === 0 && selectedSegments.length === 0) {
-      setErrorMessage(
-        "Select at least one customer or segment before submitting.",
-      );
+    setRecipientsError(null);
+    setFieldErrors({});
+
+    const body: CreateStoreCreditJobBody = {
+      amount,
+      currency,
+      customerIds: selectedCustomers.map((c) => c.id),
+      segmentIds: selectedSegments.length
+        ? selectedSegments.map((s) => s.id)
+        : undefined,
+      note: note || undefined,
+      expireDate: expireDate || undefined,
+      notify,
+      scheduledDate: scheduleEnabled ? scheduledDate || undefined : undefined,
+      scheduledTime: scheduleEnabled ? scheduledTime || undefined : undefined,
+      scheduledTimezone: scheduleEnabled
+        ? scheduledTimezone || undefined
+        : undefined,
+      scheduledMessage: scheduleEnabled
+        ? scheduledMessage || undefined
+        : undefined,
+    };
+
+    const validationErrors = validateCreateStoreCreditJobInput(body);
+    const nextFieldErrors: Record<string, string> = {};
+    let nextRecipientsError: string | null = null;
+    for (const { field, message } of validationErrors) {
+      if (field === "customerIds") {
+        nextRecipientsError = message;
+      } else {
+        nextFieldErrors[field] = message;
+      }
+    }
+    if (scheduleEnabled) {
+      if (!scheduledDate)
+        nextFieldErrors.scheduledDate = "Scheduled date is required";
+      if (!scheduledTime)
+        nextFieldErrors.scheduledTime = "Scheduled time is required";
+      if (!scheduledTimezone)
+        nextFieldErrors.scheduledTimezone = "Scheduled timezone is required";
+    }
+    if (Object.keys(nextFieldErrors).length > 0 || nextRecipientsError) {
+      setFieldErrors(nextFieldErrors);
+      setRecipientsError(nextRecipientsError);
       return;
     }
+
     setSubmitting(true);
     try {
-      const body: CreateStoreCreditJobBody = {
-        amount,
-        currency,
-        customerIds: selectedCustomers.map((c) => c.id),
-        segmentIds: selectedSegments.length
-          ? selectedSegments.map((s) => s.id)
-          : undefined,
-        note: note || undefined,
-        expireDate: expireDate || undefined,
-        notify,
-        scheduledDate: scheduleEnabled ? scheduledDate || undefined : undefined,
-        scheduledTime: scheduleEnabled ? scheduledTime || undefined : undefined,
-        scheduledTimezone: scheduleEnabled
-          ? scheduledTimezone || undefined
-          : undefined,
-        scheduledMessage: scheduleEnabled
-          ? scheduledMessage || undefined
-          : undefined,
-      };
       const res = await fetch("/api/store-credits/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -380,6 +409,9 @@ export default function CreateStoreCreditJob() {
 
         <s-section heading="Recipients">
           <s-stack direction="block" gap="base">
+            {recipientsError && (
+              <s-banner tone="critical">{recipientsError}</s-banner>
+            )}
             <s-stack direction="inline" gap="base" alignItems="center">
               <s-button variant="secondary" onClick={openCustomerPicker}>
                 Select customers
@@ -453,20 +485,34 @@ export default function CreateStoreCreditJob() {
                 min={STORE_CREDIT_RULES.minAmount}
                 step={0.01}
                 max={STORE_CREDIT_RULES.maxAmount}
-                onInput={(event: Event) =>
-                  setAmount((event.target as HTMLInputElement).value)
-                }
+                error={fieldErrors.amount}
+                onInput={(event: Event) => {
+                  setAmount((event.target as HTMLInputElement).value);
+                  if (fieldErrors.amount) {
+                    setFieldErrors((prev) => {
+                      const { amount: _amount, ...rest } = prev;
+                      return rest;
+                    });
+                  }
+                }}
               />
 
               <s-select
                 label="Currency"
                 value={currency}
-                onChange={(event: Event) =>
+                error={fieldErrors.currency}
+                onChange={(event: Event) => {
                   setCurrency(
                     (event.target as HTMLSelectElement)
                       .value as CreateStoreCreditJobBody["currency"],
-                  )
-                }
+                  );
+                  if (fieldErrors.currency) {
+                    setFieldErrors((prev) => {
+                      const { currency: _currency, ...rest } = prev;
+                      return rest;
+                    });
+                  }
+                }}
               >
                 {STORE_CREDIT_SUPPORTED_CURRENCIES.map((c) => (
                   <s-option key={c} value={c}>
@@ -483,9 +529,16 @@ export default function CreateStoreCreditJob() {
             <s-date-field
               label="Expiration Date (optional)"
               value={expireDate}
-              onChange={(event: Event) =>
-                setExpireDate((event.target as HTMLInputElement).value)
-              }
+              error={fieldErrors.expireDate}
+              onChange={(event: Event) => {
+                setExpireDate((event.target as HTMLInputElement).value);
+                if (fieldErrors.expireDate) {
+                  setFieldErrors((prev) => {
+                    const { expireDate: _expireDate, ...rest } = prev;
+                    return rest;
+                  });
+                }
+              }}
             />
 
             <s-checkbox
@@ -501,9 +554,16 @@ export default function CreateStoreCreditJob() {
               value={note}
               rows={3}
               maxLength={STORE_CREDIT_RULES.noteMaxChars}
-              onInput={(event: Event) =>
-                setNote((event.target as HTMLTextAreaElement).value)
-              }
+              error={fieldErrors.note}
+              onInput={(event: Event) => {
+                setNote((event.target as HTMLTextAreaElement).value);
+                if (fieldErrors.note) {
+                  setFieldErrors((prev) => {
+                    const { note: _note, ...rest } = prev;
+                    return rest;
+                  });
+                }
+              }}
             />
           </s-stack>
         </s-section>
@@ -529,9 +589,18 @@ export default function CreateStoreCreditJob() {
                     <s-date-field
                       label="Send Date"
                       value={scheduledDate}
-                      onChange={(event: Event) =>
-                        setScheduledDate((event.target as HTMLInputElement).value)
-                      }
+                      error={fieldErrors.scheduledDate}
+                      onChange={(event: Event) => {
+                        setScheduledDate(
+                          (event.target as HTMLInputElement).value,
+                        );
+                        if (fieldErrors.scheduledDate) {
+                          setFieldErrors((prev) => {
+                            const { scheduledDate: _d, ...rest } = prev;
+                            return rest;
+                          });
+                        }
+                      }}
                     />
                   </s-box>
 
@@ -540,9 +609,18 @@ export default function CreateStoreCreditJob() {
                       label="Send Time"
                       placeholder="HH:MM"
                       value={scheduledTime}
-                      onInput={(event: Event) =>
-                        setScheduledTime((event.target as HTMLInputElement).value)
-                      }
+                      error={fieldErrors.scheduledTime}
+                      onInput={(event: Event) => {
+                        setScheduledTime(
+                          (event.target as HTMLInputElement).value,
+                        );
+                        if (fieldErrors.scheduledTime) {
+                          setFieldErrors((prev) => {
+                            const { scheduledTime: _t, ...rest } = prev;
+                            return rest;
+                          });
+                        }
+                      }}
                     />
                   </s-box>
                 </s-grid>
@@ -550,11 +628,18 @@ export default function CreateStoreCreditJob() {
                 <s-select
                   label="Timezone"
                   value={scheduledTimezone}
-                  onChange={(event: Event) =>
+                  error={fieldErrors.scheduledTimezone}
+                  onChange={(event: Event) => {
                     setScheduledTimezone(
                       (event.target as HTMLSelectElement).value,
-                    )
-                  }
+                    );
+                    if (fieldErrors.scheduledTimezone) {
+                      setFieldErrors((prev) => {
+                        const { scheduledTimezone: _tz, ...rest } = prev;
+                        return rest;
+                      });
+                    }
+                  }}
                 >
                   <s-option value="">Select timezone</s-option>
                   {timezoneLabels.map((tz) => (
