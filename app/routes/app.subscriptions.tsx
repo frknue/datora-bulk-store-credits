@@ -3,6 +3,7 @@ import { data, useFetcher, useOutletContext } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { isShopTest } from "../services/plan.server";
+import { markSubscriptionsPageViewed } from "../lib/services/setup-guide.server";
 import {
   getPaidPlanNameById,
   paidPlanNames,
@@ -17,6 +18,12 @@ const REAUTH_URL_HEADER = "X-Shopify-API-Request-Failure-Reauthorize-Url";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
+  // Best-effort: don't block page render if the upsert fails.
+  try {
+    await markSubscriptionsPageViewed(session.shop);
+  } catch (error) {
+    console.error("Failed to mark subscriptions page viewed:", error);
+  }
   return { shopName: session.shop };
 };
 

@@ -1,26 +1,18 @@
 import {
   Outlet,
-  useFetcher,
   useLoaderData,
   useNavigate,
   useNavigation,
   useRouteError,
 } from "react-router";
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { getPlanFromBilling } from "../services/plan.server";
 import { SHOP_INFO_QUERY } from "../lib/graphql/admin";
-import { completeOnboarding } from "../lib/services/dashboard.server";
-import {
-  OnboardingModal,
-  type OnboardingModalHandle,
-} from "../components/onboarding-modal";
-import prisma from "../db.server";
 import type {
-  ActionFunctionArgs,
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
@@ -42,32 +34,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     console.error("Error fetching shop info:", error);
   }
 
-  const userSettings = await prisma.user.findUnique({
-    where: { shopName: session.shop },
-    select: { completedOnboarding: true },
-  });
-
   return {
     apiKey: process.env.SHOPIFY_API_KEY || "",
     subscriptionPlan,
     shopCurrency,
     shopTimezoneOffset,
     shopMetadataLoaded,
-    completedOnboarding: userSettings?.completedOnboarding ?? false,
   };
-};
-
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
-  const formData = await request.formData();
-  const actionType = formData.get("action");
-
-  if (actionType === "complete_onboarding") {
-    await completeOnboarding(session.shop);
-    return { success: true };
-  }
-
-  return { success: false };
 };
 
 function AppLoadingIndicator() {
@@ -104,29 +77,8 @@ export default function App() {
     shopCurrency,
     shopTimezoneOffset,
     shopMetadataLoaded,
-    completedOnboarding,
-  } =
-    useLoaderData<typeof loader>();
+  } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
-  const fetcher = useFetcher();
-  const onboardingModalRef = useRef<OnboardingModalHandle>(null);
-
-  const handleOnboardingComplete = useCallback(() => {
-    fetcher.submit(
-      { action: "complete_onboarding" },
-      { method: "post", action: "/app" },
-    );
-  }, [fetcher]);
-
-  const openOnboarding = useCallback(() => {
-    onboardingModalRef.current?.open();
-  }, []);
-
-  useEffect(() => {
-    if (!completedOnboarding) {
-      onboardingModalRef.current?.open();
-    }
-  }, [completedOnboarding]);
 
   return (
     <AppProvider embedded apiKey={apiKey}>
@@ -153,14 +105,9 @@ export default function App() {
             shopCurrency,
             shopTimezoneOffset,
             shopMetadataLoaded,
-            openOnboarding,
           }}
         />
       </s-query-container>
-      <OnboardingModal
-        ref={onboardingModalRef}
-        onComplete={handleOnboardingComplete}
-      />
     </AppProvider>
   );
 }

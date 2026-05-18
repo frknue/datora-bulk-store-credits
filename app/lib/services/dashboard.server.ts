@@ -18,11 +18,11 @@ export async function dismissContactCard(shopName: string) {
   });
 }
 
-export async function completeOnboarding(shopName: string) {
+export async function dismissSetupGuide(shopName: string) {
   await prisma.user.upsert({
     where: { shopName },
-    update: { completedOnboarding: true },
-    create: { shopName, completedOnboarding: true },
+    update: { setupGuideDismissedAt: new Date() },
+    create: { shopName, setupGuideDismissedAt: new Date() },
   });
 }
 

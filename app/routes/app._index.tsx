@@ -11,12 +11,14 @@ import { loadOverviewData } from "../lib/services/overview.server";
 import {
   dismissFeatureCard,
   dismissContactCard,
+  dismissSetupGuide,
 } from "../lib/services/dashboard.server";
 import {
   DashboardCalloutCards,
   DashboardFooterHelp,
   DashboardUsageSection,
 } from "../components/dashboard-sections";
+import { SetupGuide } from "../components/setup-guide";
 import { AppPageFooter } from "../components/app-page-footer";
 import {
   formatDateString,
@@ -51,6 +53,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   if (actionType === "dismiss_contact_card") {
     await dismissContactCard(session.shop);
+    return { success: true };
+  }
+
+  if (actionType === "dismiss_setup_guide") {
+    await dismissSetupGuide(session.shop);
     return { success: true };
   }
 
@@ -245,6 +252,8 @@ export default function Overview() {
     recent,
     showCard,
     showContactCard,
+    setupGuideDismissed,
+    setupGuideCompletion,
   } = useLoaderData<typeof loader>();
   const { subscriptionPlan } = useOutletContext<AppOutletContext>();
   const navigate = useNavigate();
@@ -266,9 +275,21 @@ export default function Overview() {
     fetcher.submit({ action: "dismiss_contact_card" }, { method: "post" });
   }, [fetcher]);
 
+  const handleDismissSetupGuide = useCallback(() => {
+    fetcher.submit({ action: "dismiss_setup_guide" }, { method: "post" });
+  }, [fetcher]);
+
   return (
     <s-page heading="Overview" inlineSize="large">
       <s-stack direction="block" gap="base">
+        {!setupGuideDismissed && (
+          <SetupGuide
+            completion={setupGuideCompletion}
+            subscriptionPlan={subscriptionPlan}
+            onDismiss={handleDismissSetupGuide}
+          />
+        )}
+
         <OverviewStatCards
           totalIssuedAllTime={totalIssuedAllTime}
           giftAllTime={giftAllTime}

@@ -8,12 +8,13 @@ datasource db {
 }
 
 model User {
-  shopName            String  @id @map("shop_name")
-  showCard            Boolean @default(true) @map("show_card")
-  showContactCard     Boolean @default(true) @map("show_contact_card")
-  completedOnboarding Boolean @default(false) @map("completed_onboarding")
-  autoDeactivateDays  Int?    @map("auto_deactivate_days")
-  slackWebhookUrl     String? @map("slack_webhook_url")
+  shopName                  String    @id @map("shop_name")
+  showCard                  Boolean   @default(true) @map("show_card")
+  showContactCard           Boolean   @default(true) @map("show_contact_card")
+  autoDeactivateDays        Int?      @map("auto_deactivate_days")
+  slackWebhookUrl           String?   @map("slack_webhook_url")
+  setupGuideDismissedAt     DateTime? @map("setup_guide_dismissed_at")
+  subscriptionsPageViewedAt DateTime? @map("subscriptions_page_viewed_at")
 }
 
 model Job {

@@ -5,5 +5,4 @@ export interface AppOutletContext {
   shopCurrency: string | null;
   shopTimezoneOffset: string | null;
   shopMetadataLoaded: boolean;
-  openOnboarding: () => void;
 }

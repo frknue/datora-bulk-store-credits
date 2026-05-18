@@ -1,4 +1,5 @@
 import prisma from "../../db.server";
+import { computeSetupGuideCompletion } from "./setup-guide.server";
 
 const GIFT_CARD_MONTHLY_STATUSES = ["scheduled", "completed", "running", "pending"];
 const STORE_CREDIT_MONTHLY_STATUSES = [
@@ -157,5 +158,7 @@ export async function loadOverviewData(shopName: string) {
     recent,
     showCard: userSettings?.showCard ?? true,
     showContactCard: userSettings?.showContactCard ?? true,
+    setupGuideDismissed: Boolean(userSettings?.setupGuideDismissedAt),
+    setupGuideCompletion: await computeSetupGuideCompletion(shopName),
   };
 }

@@ -13,5 +13,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     await db.session.deleteMany({ where: { shop } });
   }
 
+  // BFS 4.2.2 — onboarding must appear on each new install and reinstall.
+  // Clear the dismiss timestamp so the Getting Started card surfaces again
+  // if the merchant ever reinstalls.
+  await db.user.updateMany({
+    where: { shopName: shop },
+    data: { setupGuideDismissedAt: null },
+  });
+
   return new Response();
 };

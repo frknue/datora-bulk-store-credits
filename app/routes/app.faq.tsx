@@ -1,9 +1,6 @@
-import { useOutletContext } from "react-router";
 import { AppPageFooter } from "../components/app-page-footer";
-import type { AppOutletContext } from "../lib/types/app";
 
 export default function Help() {
-  const { openOnboarding } = useOutletContext<AppOutletContext>();
   // TODO: point at the dedicated store-credits docs site once it's published.
   const docsBase = "https://docs.datora.de/store-credits-app";
 
@@ -80,9 +77,6 @@ export default function Help() {
             </s-text>
             <s-stack direction="inline" gap="small">
               <s-button href="/app/contact?subject=help">Contact support</s-button>
-              <s-button variant="secondary" onClick={openOnboarding}>
-                Replay tour
-              </s-button>
             </s-stack>
           </s-stack>
         </s-section>
