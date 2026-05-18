@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { data, useFetcher, useOutletContext } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
-import { isTestShop } from "../services/plan.server";
+import { isShopTest } from "../services/plan.server";
 import {
   getPaidPlanNameById,
   paidPlanNames,
@@ -25,8 +25,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return data({ message: "Method not allowed" }, { status: 405 });
   }
 
-  const { billing, session } = await authenticate.admin(request);
-  const isTest = isTestShop(session.shop);
+  const { admin, billing, session } = await authenticate.admin(request);
+  const isTest = await isShopTest(admin, session.shop);
   const formData = await request.formData();
   const intent = formData.get("intent");
 

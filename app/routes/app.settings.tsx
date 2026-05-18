@@ -41,7 +41,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { billing, session } = await authenticate.admin(request);
+  const { admin, billing, session } = await authenticate.admin(request);
   const formData = await request.formData();
   const intent = formData.get("intent");
 
@@ -67,7 +67,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   if (intent === "saveSlackWebhook" || intent === "testSlackWebhook") {
-    const plan = await getPlanFromBilling(billing, session.shop);
+    const plan = await getPlanFromBilling(admin, billing, session.shop);
     if (!canUseSlackNotifications(plan)) {
       return {
         success: false,

@@ -7,12 +7,12 @@ import { getPlanFromBilling } from "../services/plan.server";
 import type { LoaderFunctionArgs } from "react-router";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const { billing, session } = await authenticate.admin(request);
+  const { admin, billing, session } = await authenticate.admin(request);
   const { jobId } = params;
 
   if (!jobId) return data({ message: "no jobId" }, { status: 400 });
 
-  const plan = await getPlanFromBilling(billing, session.shop);
+  const plan = await getPlanFromBilling(admin, billing, session.shop);
   if (!canUseUsageTracking(plan.id)) {
     return data(
       {

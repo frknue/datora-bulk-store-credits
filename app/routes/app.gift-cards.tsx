@@ -34,8 +34,8 @@ import type { DashboardJob } from "../lib/types/jobs";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { billing, session } = await authenticate.admin(request);
-  const plan = await getPlanFromBilling(billing, session.shop);
+  const { admin, billing, session } = await authenticate.admin(request);
+  const plan = await getPlanFromBilling(admin, billing, session.shop);
   if (plan.maxGiftCards === 0) {
     throw redirect("/app/subscriptions");
   }

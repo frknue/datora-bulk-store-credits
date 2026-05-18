@@ -149,7 +149,7 @@ export async function createStoreCreditJob(
 
   if (scheduleError) return buildErrorResult(scheduleError);
 
-  const plan = await getPlanFromBilling(billing, session.shop);
+  const plan = await getPlanFromBilling(admin, billing, session.shop);
 
   if (!hasPlanFeature(plan, "send-by-email")) {
     return buildErrorResult(

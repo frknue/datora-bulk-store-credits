@@ -24,8 +24,8 @@ type SelectedCustomer = Pick<StoreCreditPickerCustomer, "id" | "name" | "email">
 type SelectedSegment = Pick<StoreCreditPickerSegment, "id" | "name" | "count">;
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { billing, session } = await authenticate.admin(request);
-  const plan = await getPlanFromBilling(billing, session.shop);
+  const { admin, billing, session } = await authenticate.admin(request);
+  const plan = await getPlanFromBilling(admin, billing, session.shop);
   if (plan.maxGiftCards === 0) {
     throw redirect("/app/subscriptions");
   }

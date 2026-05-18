@@ -27,7 +27,7 @@ import type {
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, billing, session } = await authenticate.admin(request);
-  const subscriptionPlan = await getPlanFromBilling(billing, session.shop);
+  const subscriptionPlan = await getPlanFromBilling(admin, billing, session.shop);
 
   let shopCurrency: string | null = null;
   let shopTimezoneOffset: string | null = null;

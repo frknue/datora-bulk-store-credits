@@ -179,7 +179,7 @@ export async function createBulkGiftCardJob(
     );
   }
 
-  const plan = await getPlanFromBilling(billing, session.shop);
+  const plan = await getPlanFromBilling(admin, billing, session.shop);
   const subscriptionPlanId = plan.id;
 
   if (hasRecipients && !hasPlanFeature(plan, "send-by-email")) {

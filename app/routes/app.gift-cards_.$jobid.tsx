@@ -61,7 +61,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   const jobId = params.jobid;
   const formData = await request.formData();
   const intent = formData.get("intent");
-  const subscriptionPlan = await getPlanFromBilling(billing, session.shop);
+  const subscriptionPlan = await getPlanFromBilling(admin, billing, session.shop);
 
   if (!jobId) return data({ message: "Job ID is required" }, { status: 400 });
 

@@ -4,14 +4,14 @@ import { getPlanFromBilling } from "../services/plan.server";
 import type { LoaderFunctionArgs } from "react-router";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const { billing, session } = await authenticate.admin(request);
+  const { admin, billing, session } = await authenticate.admin(request);
   const { jobid, subscriptionid } = params;
 
   if (!jobid || !subscriptionid) {
     return Response.json({ message: "missing parameters" }, { status: 400 });
   }
 
-  const currentPlan = await getPlanFromBilling(billing, session.shop);
+  const currentPlan = await getPlanFromBilling(admin, billing, session.shop);
 
   const url = new URL(request.url);
   return buildJobDownloadResponse({

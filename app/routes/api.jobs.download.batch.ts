@@ -4,7 +4,7 @@ import { getPlanFromBilling } from "../services/plan.server";
 import type { ActionFunctionArgs } from "react-router";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { billing, session } = await authenticate.admin(request);
+  const { admin, billing, session } = await authenticate.admin(request);
 
   if (request.method !== "POST") {
     return Response.json({ message: "Method not allowed" }, { status: 405 });
@@ -24,7 +24,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  const currentPlan = await getPlanFromBilling(billing, session.shop);
+  const currentPlan = await getPlanFromBilling(admin, billing, session.shop);
 
   return buildBatchJobDownloadResponse({
     jobIds,

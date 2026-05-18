@@ -1,16 +1,16 @@
 import { authenticate } from "../shopify.server";
-import { TEST_STORES } from "../lib/config/test-stores";
 import {
   canDownload,
   getPlanById,
   getPlanIdByName,
-  paidPlanNames,
   type SubscriptionPlan,
 } from "../lib/subscriptions/plans";
 import type { LoaderFunctionArgs } from "react-router";
 
 type AppRequest = LoaderFunctionArgs["request"];
-type BillingContext = Awaited<ReturnType<typeof authenticate.admin>>["billing"];
+type AdminAuthContext = Awaited<ReturnType<typeof authenticate.admin>>;
+type AdminContext = AdminAuthContext["admin"];
+type BillingContext = AdminAuthContext["billing"];
 type PlanFeatureId =
   | "download-csv"
   | "code-formatter"
@@ -89,35 +89,91 @@ export function getFeatureMinimumPlan(
   return featureMinimumPlans[featureId];
 }
 
-// While the app is awaiting review or otherwise pre-launch, force test billing
-// for every shop. Set BILLING_LIVE=true in production once the listing is
-// approved and real charges should be made.
-const billingLive = process.env.BILLING_LIVE === "true";
+const isTestShopCache = new Map<string, boolean>();
 
-export function isTestShop(shop: string): boolean {
-  if (!billingLive) {
-    return true;
+export async function isShopTest(
+  admin: AdminContext,
+  shop: string,
+): Promise<boolean> {
+  const cached = isTestShopCache.get(shop);
+  if (cached !== undefined) return cached;
+
+  try {
+    const response = await admin.graphql(`#graphql
+      query ShopBillingContext {
+        shop {
+          plan {
+            partnerDevelopment
+          }
+        }
+      }
+    `);
+    const json = (await response.json()) as {
+      data?: { shop?: { plan?: { partnerDevelopment?: boolean } } };
+    };
+    const isTest = Boolean(json.data?.shop?.plan?.partnerDevelopment);
+    isTestShopCache.set(shop, isTest);
+    return isTest;
+  } catch (error) {
+    console.error("Failed to read shop.plan, defaulting to non-test:", error);
+    return false;
   }
-  return TEST_STORES.includes(shop);
 }
 
+const ACTIVE_APP_SUBSCRIPTIONS_QUERY = `#graphql
+  query ActiveAppSubscriptions {
+    currentAppInstallation {
+      activeSubscriptions {
+        id
+        name
+        status
+        test
+      }
+    }
+  }
+`;
+
+type ActiveSubscriptionsResponse = {
+  data?: {
+    currentAppInstallation?: {
+      activeSubscriptions?: Array<{
+        id: string;
+        name: string;
+        status: string;
+        test: boolean;
+      }>;
+    };
+  };
+};
+
+// `billing` and `shop` are kept in the signature so the existing callers don't
+// have to change. The BFS reviewer's test charge wasn't recognized because
+// billing.check filters by isTest — and isTest comes from
+// shop.plan.partnerDevelopment, which is false on reviewer stores. Query
+// currentAppInstallation.activeSubscriptions directly instead; it returns
+// both test and live active subs in one call. The write path (billing.request
+// / billing.cancel) is unchanged.
 export async function getPlanFromBilling(
-  billing: BillingContext,
+  admin: AdminContext,
+  _billing: BillingContext,
   shop: string,
 ): Promise<SubscriptionPlan> {
   try {
-    const { appSubscriptions } = await billing.check({
-      plans: [...paidPlanNames],
-      isTest: isTestShop(shop),
-    });
+    const response = await admin.graphql(ACTIVE_APP_SUBSCRIPTIONS_QUERY);
+    const json = (await response.json()) as ActiveSubscriptionsResponse;
+    const subscriptions =
+      json?.data?.currentAppInstallation?.activeSubscriptions ?? [];
 
-    const activeSubscription = appSubscriptions.find(
+    // Any ACTIVE subscription counts, test or live. Reviewer test charges
+    // land here with test=true; real merchant charges land here with
+    // test=false. Both are treated identically for plan resolution.
+    const activeSubscription = subscriptions.find(
       (subscription) => subscription.status === "ACTIVE",
     );
 
     return getPlanById(getPlanIdByName(activeSubscription?.name));
   } catch (error) {
-    console.error("Error fetching subscription plan:", error);
+    console.error("[plan] failed to fetch subscription plan", { shop, error });
     return getPlanById(1);
   }
 }
@@ -148,8 +204,8 @@ export class PlanService {
       return this.planCache;
     }
 
-    const { billing, session } = await authenticate.admin(this.request);
-    this.planCache = await getPlanFromBilling(billing, session.shop);
+    const { admin, billing, session } = await authenticate.admin(this.request);
+    this.planCache = await getPlanFromBilling(admin, billing, session.shop);
     return this.planCache;
   }
 
