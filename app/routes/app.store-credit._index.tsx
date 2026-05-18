@@ -179,6 +179,7 @@ export default function StoreCreditIndex() {
   const isUnlimited = planMaxAmount === -1;
   const isAtLimit =
     !isUnlimited && storeCreditRecipientsThisMonth >= planMaxAmount;
+  const canIssueStoreCredit = subscriptionPlan.extension;
 
   const activeJobIds = jobs
     .filter((j) => j.status === "pending" || j.status === "running")
@@ -199,19 +200,28 @@ export default function StoreCreditIndex() {
       <s-button
         slot="primary-action"
         variant="primary"
+        disabled={!canIssueStoreCredit || undefined}
         onClick={() => navigate("/app/store-credit/create")}
       >
         Issue store credit
       </s-button>
 
       <s-stack direction="block" gap="base">
-        {isAtLimit && (
+        {/* Single prioritized banner — warning hides the upsell info while
+            the user is at the limit (BFS 4.3.4). */}
+        {isAtLimit ? (
           <s-banner tone="warning">
             You&apos;ve reached your monthly limit of {formatNumber(planMaxAmount, 0)}{" "}
             issues on the {subscriptionPlan.name} plan.{" "}
             <s-link href="/app/subscriptions">Upgrade your plan</s-link> to issue more.
           </s-banner>
-        )}
+        ) : !canIssueStoreCredit ? (
+          <s-banner tone="info">
+            Issuing store credit is available on the Basic plan and above.{" "}
+            <s-link href="/app/subscriptions">Upgrade your plan</s-link> to
+            start sending store credit to your customers.
+          </s-banner>
+        ) : null}
 
         {totalJobs > 0 && (
           <StoreCreditStatCards
@@ -246,6 +256,7 @@ export default function StoreCreditIndex() {
                     slot="primary-action"
                     variant="primary"
                     aria-label="Issue store credit"
+                    disabled={!canIssueStoreCredit || undefined}
                     onClick={() => navigate("/app/store-credit/create")}
                   >
                     Issue store credit
@@ -403,6 +414,8 @@ export default function StoreCreditIndex() {
           planName={subscriptionPlan.name}
           planMaxAmount={planMaxAmount}
           isUnlimited={isUnlimited}
+          featureAvailable={canIssueStoreCredit}
+          unavailableMessage="Issuing store credit is available on the Basic plan and above."
         />
 
         <DashboardCalloutCards

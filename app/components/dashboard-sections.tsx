@@ -88,6 +88,8 @@ interface DashboardUsageSectionProps {
   planName: string;
   planMaxAmount: number;
   isUnlimited: boolean;
+  featureAvailable?: boolean;
+  unavailableMessage?: string;
 }
 
 interface DashboardRunningJobsBannerProps {
@@ -148,6 +150,8 @@ export function DashboardUsageSection({
   planName,
   planMaxAmount,
   isUnlimited,
+  featureAvailable = true,
+  unavailableMessage,
 }: DashboardUsageSectionProps) {
   const usagePercent = isUnlimited
     ? 0
@@ -174,21 +178,27 @@ export function DashboardUsageSection({
         </s-box>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <s-stack direction="block" gap="small-100">
-            <DashboardUsageProgressBar percent={usagePercent} tone={progressTone} />
-            <s-stack direction="inline" justifyContent="space-between" gap="base">
-              <s-text>
-                <strong>Used:</strong> {formatNumber(totalGiftCardsThisMonth, 0)}
-                {isUnlimited ? "" : ` / ${formatNumber(planMaxAmount, 0)}`}
-              </s-text>
-              <s-text>
-                <strong>Available:</strong> {remaining}
-              </s-text>
+          {featureAvailable ? (
+            <s-stack direction="block" gap="small-100">
+              <DashboardUsageProgressBar percent={usagePercent} tone={progressTone} />
+              <s-stack direction="inline" justifyContent="space-between" gap="base">
+                <s-text>
+                  <strong>Used:</strong> {formatNumber(totalGiftCardsThisMonth, 0)}
+                  {isUnlimited ? "" : ` / ${formatNumber(planMaxAmount, 0)}`}
+                </s-text>
+                <s-text>
+                  <strong>Available:</strong> {remaining}
+                </s-text>
+              </s-stack>
             </s-stack>
-          </s-stack>
+          ) : (
+            <s-text color="subdued">
+              {unavailableMessage ?? "Not available on your current plan."}
+            </s-text>
+          )}
         </div>
 
-        {isAtLimit ? (
+        {featureAvailable && isAtLimit ? (
           <s-button variant="secondary" href="/app/subscriptions">
             Upgrade plan
           </s-button>

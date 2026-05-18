@@ -123,15 +123,15 @@ function DashboardRowActions({
   const downloadTooltipId = `job-${job.id}-download-tooltip`;
   const duplicateTooltipId = `job-${job.id}-duplicate-tooltip`;
   const deactivateTooltipId = `job-${job.id}-deactivate-tooltip`;
-  const canDeactivate =
-    canDeactivateGiftCards(subscriptionPlan) &&
-    job.status === "completed" &&
-    !job.deactivatedAt;
+  const hasDeactivateFeature = canDeactivateGiftCards(subscriptionPlan);
+  const hasDuplicateFeature = subscriptionPlan.duplicate;
+  const deactivateUpgradeTooltip =
+    "Deactivation is available on the Premium plan and above.";
+  const duplicateUpgradeTooltip =
+    "Duplicate is available on the Basic plan and above.";
+  const canDeactivate = job.status === "completed" && !job.deactivatedAt;
   const canDeactivateCancelled =
-    canDeactivateGiftCards(subscriptionPlan) &&
-    !job.deactivatedAt &&
-    !isJobDeactivating &&
-    completedCount > 0;
+    !job.deactivatedAt && !isJobDeactivating && completedCount > 0;
   const canResumeCancelled = !job.deactivatedAt && !isJobDeactivating;
   const resumeTooltipId = `job-${job.id}-resume-tooltip`;
 
@@ -191,33 +191,47 @@ function DashboardRowActions({
             />
           </>
         )}
-        {subscriptionPlan.duplicate && (
-          <>
-            <s-tooltip id={duplicateTooltipId}>
-              <s-text>Duplicate job</s-text>
-            </s-tooltip>
-            <s-button
-              variant="secondary"
-              icon="duplicate"
-              interestFor={duplicateTooltipId}
-              accessibilityLabel="Duplicate job"
-              onClick={() => onDuplicate(job)}
-              disabled={isActiveActionRow || undefined}
-            />
-          </>
-        )}
+        <>
+          <s-tooltip id={duplicateTooltipId}>
+            <s-text>
+              {hasDuplicateFeature ? "Duplicate job" : duplicateUpgradeTooltip}
+            </s-text>
+          </s-tooltip>
+          <s-button
+            variant="secondary"
+            icon="duplicate"
+            interestFor={duplicateTooltipId}
+            accessibilityLabel={
+              hasDuplicateFeature ? "Duplicate job" : duplicateUpgradeTooltip
+            }
+            onClick={() => onDuplicate(job)}
+            disabled={
+              !hasDuplicateFeature || isActiveActionRow || undefined
+            }
+          />
+        </>
         {canDeactivate && (
           <>
             <s-tooltip id={deactivateTooltipId}>
-              <s-text>Deactivate gift cards</s-text>
+              <s-text>
+                {hasDeactivateFeature
+                  ? "Deactivate gift cards"
+                  : deactivateUpgradeTooltip}
+              </s-text>
             </s-tooltip>
             <s-button
               variant="secondary"
               icon="disabled"
               interestFor={deactivateTooltipId}
-              accessibilityLabel="Deactivate gift cards"
+              accessibilityLabel={
+                hasDeactivateFeature
+                  ? "Deactivate gift cards"
+                  : deactivateUpgradeTooltip
+              }
               onClick={() => onDeactivate(job.id)}
-              disabled={isActiveActionRow || undefined}
+              disabled={
+                !hasDeactivateFeature || isActiveActionRow || undefined
+              }
               loading={isDeactivating || undefined}
             />
           </>
@@ -244,15 +258,25 @@ function DashboardRowActions({
         {canDeactivateCancelled && (
           <>
             <s-tooltip id={deactivateTooltipId}>
-              <s-text>Deactivate gift cards</s-text>
+              <s-text>
+                {hasDeactivateFeature
+                  ? "Deactivate gift cards"
+                  : deactivateUpgradeTooltip}
+              </s-text>
             </s-tooltip>
             <s-button
               variant="secondary"
               icon="disabled"
               interestFor={deactivateTooltipId}
-              accessibilityLabel="Deactivate gift cards"
+              accessibilityLabel={
+                hasDeactivateFeature
+                  ? "Deactivate gift cards"
+                  : deactivateUpgradeTooltip
+              }
               onClick={() => onDeactivate(job.id)}
-              disabled={isActiveActionRow || undefined}
+              disabled={
+                !hasDeactivateFeature || isActiveActionRow || undefined
+              }
               loading={isDeactivating || undefined}
             />
           </>

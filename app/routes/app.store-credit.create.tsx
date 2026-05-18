@@ -372,6 +372,34 @@ export default function CreateStoreCreditJob() {
     }
   }
 
+  if (!canIssueStoreCredit) {
+    return (
+      <s-page heading="Issue store credit" inlineSize="base">
+        <s-link slot="breadcrumb-actions" href="/app/store-credit">
+          Store Credits
+        </s-link>
+        <s-stack direction="block" gap="base">
+          <s-section>
+            <s-stack direction="block" gap="base">
+              <s-heading>Available on the Basic plan and above</s-heading>
+              <s-text>
+                Issuing store credit to customers is a paid feature. Upgrade
+                your plan to send store credit by email, schedule issuance,
+                and target customer segments.
+              </s-text>
+              <div>
+                <s-button variant="primary" href="/app/subscriptions">
+                  Upgrade your plan
+                </s-button>
+              </div>
+            </s-stack>
+          </s-section>
+          <AppPageFooter />
+        </s-stack>
+      </s-page>
+    );
+  }
+
   return (
     <s-page heading="Issue store credit" inlineSize="base">
       <s-button

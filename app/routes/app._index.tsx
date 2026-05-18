@@ -141,11 +141,15 @@ function QuickActionCard({
   description,
   buttonLabel,
   onClick,
+  disabled,
+  upgradeMessage,
 }: {
   title: string;
   description: string;
   buttonLabel: string;
   onClick: () => void;
+  disabled?: boolean;
+  upgradeMessage?: string;
 }) {
   return (
     <s-box
@@ -165,9 +169,19 @@ function QuickActionCard({
         <s-stack direction="block" gap="base">
           <s-heading>{title}</s-heading>
           <s-paragraph>{description}</s-paragraph>
+          {disabled && upgradeMessage && (
+            <s-text color="subdued">
+              {upgradeMessage}{" "}
+              <s-link href="/app/subscriptions">Upgrade your plan</s-link>.
+            </s-text>
+          )}
         </s-stack>
         <s-stack direction="inline">
-          <s-button variant="primary" onClick={onClick}>
+          <s-button
+            variant="primary"
+            onClick={onClick}
+            disabled={disabled || undefined}
+          >
             {buttonLabel}
           </s-button>
         </s-stack>
@@ -276,6 +290,8 @@ export default function Overview() {
             description="Credit one customer or a whole segment in bulk. Pick a currency, set an expiry, and send now or schedule for later."
             buttonLabel="Issue store credit"
             onClick={() => navigate("/app/store-credit/create")}
+            disabled={!subscriptionPlan.extension}
+            upgradeMessage="Issuing store credit is available on the Basic plan and above."
           />
           {giftCardsAvailable && (
             <QuickActionCard
@@ -314,6 +330,8 @@ export default function Overview() {
               planName={subscriptionPlan.name}
               planMaxAmount={maxStoreCreditsCap}
               isUnlimited={storeCreditsUnlimited}
+              featureAvailable={subscriptionPlan.extension}
+              unavailableMessage="Issuing store credit is available on the Basic plan and above."
             />
           </s-stack>
 

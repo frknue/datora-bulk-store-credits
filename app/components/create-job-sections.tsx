@@ -26,6 +26,7 @@ interface CreateJobPresetSectionProps {
   presets: CreateJobPresetOption[];
   selectedPreset: string;
   onPresetChange: (value: string) => void;
+  disabled?: boolean;
 }
 
 interface CreateJobSchedulingSectionProps {
@@ -49,6 +50,7 @@ interface CreateJobSavePresetSectionProps {
   presetNameError?: string;
   onSavePresetChange: (checked: boolean) => void;
   onPresetNameChange: (value: string) => void;
+  disabled?: boolean;
 }
 
 interface CreateJobSummarySectionProps {
@@ -109,6 +111,7 @@ export function CreateJobPresetSection({
   presets,
   selectedPreset,
   onPresetChange,
+  disabled = false,
 }: CreateJobPresetSectionProps) {
   return (
     <s-select
@@ -118,6 +121,7 @@ export function CreateJobPresetSection({
       onChange={(event: Event) =>
         onPresetChange((event.target as HTMLSelectElement).value)
       }
+      disabled={disabled || undefined}
     >
       <s-option value="">Select Preset</s-option>
       {presets.map((preset) => (
@@ -253,6 +257,7 @@ export function CreateJobSavePresetSection({
   presetNameError,
   onSavePresetChange,
   onPresetNameChange,
+  disabled = false,
 }: CreateJobSavePresetSectionProps) {
   return (
     <s-stack direction="block" gap="base">
@@ -262,7 +267,17 @@ export function CreateJobSavePresetSection({
         onChange={(event: Event) =>
           onSavePresetChange((event.target as HTMLInputElement).checked)
         }
+        disabled={disabled || undefined}
       />
+
+      {disabled && (
+        <s-text color="subdued">
+          Saving and loading job presets is available on the Premium plan and
+          above.{" "}
+          <s-link href="/app/subscriptions">Upgrade your plan</s-link> to
+          reuse form configurations across jobs.
+        </s-text>
+      )}
 
       {savePreset && (
         <s-text-field
@@ -273,6 +288,7 @@ export function CreateJobSavePresetSection({
             onPresetNameChange((event.target as HTMLInputElement).value)
           }
           error={presetNameError}
+          disabled={disabled || undefined}
         />
       )}
     </s-stack>

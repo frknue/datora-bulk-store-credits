@@ -530,15 +530,14 @@ export default function CreateJob() {
               codeLengthOptions={createJobCodeLengthOptions}
             />
 
-            {subscriptionPlan.presets && (
-              <CreateJobSavePresetSection
-                savePreset={savePreset}
-                presetName={presetName}
-                presetNameError={errors.presetName}
-                onSavePresetChange={setSavePreset}
-                onPresetNameChange={setPresetName}
-              />
-            )}
+            <CreateJobSavePresetSection
+              savePreset={savePreset}
+              presetName={presetName}
+              presetNameError={errors.presetName}
+              onSavePresetChange={setSavePreset}
+              onPresetNameChange={setPresetName}
+              disabled={!subscriptionPlan.presets}
+            />
 
             {count && value && (
               <CreateJobSummarySection

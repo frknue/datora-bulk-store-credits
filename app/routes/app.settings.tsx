@@ -8,7 +8,10 @@ import { useState, useCallback, useEffect } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { getPlanFromBilling } from "../services/plan.server";
-import { canUseSlackNotifications } from "../lib/subscriptions/plans";
+import {
+  canDeactivateGiftCards,
+  canUseSlackNotifications,
+} from "../lib/subscriptions/plans";
 import { AppPageFooter } from "../components/app-page-footer";
 import prisma from "../db.server";
 import type { AppOutletContext } from "../lib/types/app";
@@ -152,6 +155,7 @@ export default function Settings() {
   const slackFetcher = useFetcher<ActionData>();
   const testFetcher = useFetcher<ActionData>();
   const canSlack = canUseSlackNotifications(subscriptionPlan);
+  const canDeactivate = canDeactivateGiftCards(subscriptionPlan);
 
   const initialDeactivateEnabled = autoDeactivateDays !== null;
   const initialDays =
@@ -181,8 +185,9 @@ export default function Settings() {
   const [slackError, setSlackError] = useState<string | null>(null);
 
   const isDeactivationDirty =
-    deactivateEnabled !== deactivationBaseline.enabled ||
-    days !== deactivationBaseline.days;
+    canDeactivate &&
+    (deactivateEnabled !== deactivationBaseline.enabled ||
+      days !== deactivationBaseline.days);
   const isSlackDirty =
     canSlack &&
     (slackEnabled !== slackBaseline.enabled ||
@@ -367,16 +372,31 @@ export default function Settings() {
               <s-grid-item>
                 <s-section>
                   <s-stack gap="base">
-                    {/* When the critical deactivationError banner is visible,
-                        suppress the permanent-disclaimer warning banner below
-                        so two banners never stack in this card (BFS 4.3.4). */}
-                    {deactivationError && (
-                      <s-banner tone="critical">{deactivationError}</s-banner>
+                    {!canDeactivate && (
+                      <s-banner tone="info">
+                        Auto-deactivation is available on the Premium and
+                        Ultimate plans.{" "}
+                        <s-link href="/app/subscriptions">
+                          Upgrade your plan
+                        </s-link>{" "}
+                        to automatically expire gift cards.
+                      </s-banner>
                     )}
+                    {/* Fallback banner only when the field isn't rendered
+                        (toggle off). When the field is rendered, the error
+                        is shown via `error=` below. */}
+                    {deactivationError &&
+                      !deactivateEnabled &&
+                      canDeactivate && (
+                        <s-banner tone="critical">
+                          {deactivationError}
+                        </s-banner>
+                      )}
                     <s-checkbox
                       label="Enable auto-deactivation"
                       checked={deactivateEnabled || undefined}
                       onChange={handleDeactivateEnabledChange}
+                      disabled={!canDeactivate || undefined}
                     />
 
                     {deactivateEnabled && (
@@ -386,6 +406,8 @@ export default function Settings() {
                           name="days"
                           value={days}
                           onInput={handleDaysInput}
+                          error={deactivationError ?? undefined}
+                          disabled={!canDeactivate || undefined}
                         />
                         <s-text color="subdued">
                           When a job is older than this many days, all gift
@@ -396,14 +418,15 @@ export default function Settings() {
                       </>
                     )}
 
-                    {!(deactivationError && !deactivateEnabled) && (
-                      <s-banner tone="warning">
-                        Deactivation is permanent and cannot be undone. All
-                        gift cards in eligible jobs are deactivated, even
-                        those with a remaining balance — customers will lose
-                        access to any unspent funds.
-                      </s-banner>
-                    )}
+                    {canDeactivate &&
+                      !(deactivationError && !deactivateEnabled) && (
+                        <s-banner tone="warning">
+                          Deactivation is permanent and cannot be undone. All
+                          gift cards in eligible jobs are deactivated, even
+                          those with a remaining balance — customers will lose
+                          access to any unspent funds.
+                        </s-banner>
+                      )}
                   </s-stack>
                 </s-section>
               </s-grid-item>
@@ -431,59 +454,65 @@ export default function Settings() {
               </s-grid-item>
               <s-grid-item>
                 <s-section>
-                  {canSlack ? (
-                    <s-stack gap="base">
-                      {slackError && (
-                        <s-banner tone="critical">{slackError}</s-banner>
-                      )}
-                      <s-checkbox
-                        label="Enable Slack notifications"
-                        checked={slackEnabled || undefined}
-                        onChange={handleSlackEnabledChange}
-                      />
+                  <s-stack gap="base">
+                    {!canSlack && (
+                      <s-banner tone="info">
+                        Slack notifications are available on the Premium and
+                        Ultimate plans.{" "}
+                        <s-link href="/app/subscriptions">
+                          Upgrade your plan
+                        </s-link>{" "}
+                        to get job updates in Slack.
+                      </s-banner>
+                    )}
+                    {slackError && !slackEnabled && canSlack && (
+                      <s-banner tone="critical">{slackError}</s-banner>
+                    )}
+                    <s-checkbox
+                      label="Enable Slack notifications"
+                      checked={slackEnabled || undefined}
+                      onChange={handleSlackEnabledChange}
+                      disabled={!canSlack || undefined}
+                    />
 
-                      {slackEnabled && (
-                        <>
-                          <s-text-field
-                            label="Webhook URL"
-                            name="slackWebhookUrl"
-                            value={webhookUrl}
-                            onInput={handleWebhookUrlInput}
-                          />
-                          <s-text color="subdued">
-                            Create an Incoming Webhook at{" "}
-                            <s-link
-                              href="https://api.slack.com/apps"
-                              target="_blank"
-                            >
-                              api.slack.com/apps
-                            </s-link>{" "}
-                            and paste the URL above.
-                          </s-text>
-                        </>
-                      )}
-
-                      {slackEnabled && webhookUrl && !isSlackDirty && (
-                        <div>
-                          <s-button
-                            variant="secondary"
-                            onClick={handleTestSlack}
-                            loading={
-                              testFetcher.state !== "idle" || undefined
-                            }
+                    {slackEnabled && (
+                      <>
+                        <s-text-field
+                          label="Webhook URL"
+                          name="slackWebhookUrl"
+                          value={webhookUrl}
+                          onInput={handleWebhookUrlInput}
+                          error={slackError ?? undefined}
+                          disabled={!canSlack || undefined}
+                        />
+                        <s-text color="subdued">
+                          Create an Incoming Webhook at{" "}
+                          <s-link
+                            href="https://api.slack.com/apps"
+                            target="_blank"
                           >
-                            Send test notification
-                          </s-button>
-                        </div>
-                      )}
-                    </s-stack>
-                  ) : (
-                    <s-text>
-                      Slack notifications are available on the Premium and
-                      Ultimate plans.{" "}
-                      <s-link href="/app/subscriptions">Upgrade your plan</s-link>
-                    </s-text>
-                  )}
+                            api.slack.com/apps
+                          </s-link>{" "}
+                          and paste the URL above.
+                        </s-text>
+                      </>
+                    )}
+
+                    {slackEnabled && webhookUrl && !isSlackDirty && (
+                      <div>
+                        <s-button
+                          variant="secondary"
+                          onClick={handleTestSlack}
+                          loading={
+                            testFetcher.state !== "idle" || undefined
+                          }
+                          disabled={!canSlack || undefined}
+                        >
+                          Send test notification
+                        </s-button>
+                      </div>
+                    )}
+                  </s-stack>
                 </s-section>
               </s-grid-item>
             </s-grid>
