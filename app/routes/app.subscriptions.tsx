@@ -175,7 +175,7 @@ function PlanCard({
         {/* Header */}
         <s-stack direction="inline" gap="small" alignItems="center">
           <span style={{ fontSize: "1.25rem", fontWeight: 600 }}>{plan.name}</span>
-          {isCurrent && <s-badge tone="info">Current Plan</s-badge>}
+          {isCurrent && <s-badge tone="neutral">Current Plan</s-badge>}
         </s-stack>
 
         {/* Price */}

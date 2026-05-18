@@ -1,4 +1,5 @@
 import {
+  isRouteErrorResponse,
   Outlet,
   useLoaderData,
   useNavigate,
@@ -113,7 +114,53 @@ export default function App() {
 }
 
 export function ErrorBoundary() {
-  return boundary.error(useRouteError());
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    const message =
+      typeof error.data === "string"
+        ? error.data
+        : typeof error.data?.message === "string"
+          ? error.data.message
+          : error.status === 404
+            ? "We couldn't find what you were looking for."
+            : "Something went wrong loading this page.";
+
+    return (
+      <div
+        style={{
+          maxWidth: "600px",
+          margin: "48px auto",
+          padding: "24px",
+          fontFamily:
+            "-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif",
+        }}
+      >
+        <h1 style={{ fontSize: "20px", fontWeight: 600, marginBottom: "8px" }}>
+          {error.status === 404
+            ? "Page not found"
+            : "Something went wrong"}
+        </h1>
+        <p style={{ color: "#616161", marginBottom: "24px" }}>{message}</p>
+        <a
+          href="/app"
+          style={{
+            display: "inline-block",
+            padding: "10px 16px",
+            background: "#303030",
+            color: "#fff",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: 500,
+          }}
+        >
+          Back to dashboard
+        </a>
+      </div>
+    );
+  }
+
+  return boundary.error(error);
 }
 
 export const headers: HeadersFunction = (headersArgs) => {
