@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router";
+import { useAppBridge } from "@shopify/app-bridge-react";
 import { AppPageFooter } from "../components/app-page-footer";
 import { authenticate } from "../shopify.server";
 import {
@@ -13,6 +14,8 @@ import type { StoreCreditPickerSegment } from "./api.store-credits.segments";
 import type { AppOutletContext } from "../lib/types/app";
 import type { LoaderFunctionArgs } from "react-router";
 
+const STORE_CREDIT_SAVE_BAR = "create-store-credit-save-bar";
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   return { shopName: session.shop };
@@ -22,14 +25,19 @@ type SelectedCustomer = Pick<StoreCreditPickerCustomer, "id" | "name" | "email">
 type SelectedSegment = Pick<StoreCreditPickerSegment, "id" | "name" | "count">;
 
 export default function CreateStoreCreditJob() {
-  const { shopCurrency } = useOutletContext<AppOutletContext>();
+  const { shopCurrency, subscriptionPlan } =
+    useOutletContext<AppOutletContext>();
   const navigate = useNavigate();
+  const shopify = useAppBridge();
+  const canIssueStoreCredit = subscriptionPlan.extension;
 
   const defaultCurrency =
     shopCurrency &&
     (STORE_CREDIT_SUPPORTED_CURRENCIES as readonly string[]).includes(shopCurrency)
       ? (shopCurrency as CreateStoreCreditJobBody["currency"])
       : "EUR";
+
+  const initialCurrencyRef = useRef(defaultCurrency);
 
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] =
@@ -237,6 +245,57 @@ export default function CreateStoreCreditJob() {
     !allVisibleSelected &&
     pickerResults.some((c) => pendingSelected.some((p) => p.id === c.id));
 
+  const isDirty =
+    amount !== "" ||
+    currency !== initialCurrencyRef.current ||
+    selectedCustomers.length > 0 ||
+    selectedSegments.length > 0 ||
+    expireDate !== "" ||
+    notify !== true ||
+    note !== "" ||
+    scheduleEnabled ||
+    scheduledDate !== "" ||
+    scheduledTime !== "" ||
+    scheduledTimezone !== "" ||
+    scheduledMessage !== "";
+
+  useEffect(() => {
+    if (!canIssueStoreCredit) return;
+    if (isDirty) shopify.saveBar.show(STORE_CREDIT_SAVE_BAR);
+    else shopify.saveBar.hide(STORE_CREDIT_SAVE_BAR);
+  }, [isDirty, shopify, canIssueStoreCredit]);
+
+  useEffect(() => {
+    return () => {
+      shopify.saveBar.hide(STORE_CREDIT_SAVE_BAR);
+    };
+  }, [shopify]);
+
+  const handleBreadcrumbClick = useCallback(async () => {
+    try {
+      await shopify.saveBar.leaveConfirmation();
+    } catch {
+      return;
+    }
+    navigate("/app/store-credit");
+  }, [shopify, navigate]);
+
+  const handleDiscard = useCallback(() => {
+    setAmount("");
+    setCurrency(initialCurrencyRef.current);
+    setSelectedCustomers([]);
+    setSelectedSegments([]);
+    setExpireDate("");
+    setNotify(true);
+    setNote("");
+    setScheduleEnabled(false);
+    setScheduledDate("");
+    setScheduledTime("");
+    setScheduledTimezone("");
+    setScheduledMessage("");
+    setErrorMessage(null);
+  }, []);
+
   async function handleSubmit() {
     setErrorMessage(null);
     if (selectedCustomers.length === 0 && selectedSegments.length === 0) {
@@ -276,7 +335,9 @@ export default function CreateStoreCreditJob() {
         setErrorMessage(data.message || "Failed to create store credit job");
         return;
       }
-      navigate(`/app/store-credit/${data.jobId}`);
+      shopify.saveBar.hide(STORE_CREDIT_SAVE_BAR);
+      shopify.toast.show("Store credit job created");
+      navigate("/app/store-credit");
     } finally {
       setSubmitting(false);
     }
@@ -284,9 +345,13 @@ export default function CreateStoreCreditJob() {
 
   return (
     <s-page heading="Issue store credit" inlineSize="base">
-      <s-link slot="breadcrumb-actions" href="/app/store-credit">
+      <s-button
+        slot="breadcrumb-actions"
+        variant="tertiary"
+        onClick={handleBreadcrumbClick}
+      >
         Store Credits
-      </s-link>
+      </s-button>
       <s-button
         slot="primary-action"
         variant="primary"
@@ -295,6 +360,16 @@ export default function CreateStoreCreditJob() {
       >
         Issue store credit
       </s-button>
+
+      <ui-save-bar id={STORE_CREDIT_SAVE_BAR}>
+        <button
+          {...{ variant: "primary", loading: submitting || undefined }}
+          onClick={handleSubmit}
+        >
+          Issue store credit
+        </button>
+        <button onClick={handleDiscard}>Discard</button>
+      </ui-save-bar>
 
       <s-stack direction="block" gap="base">
         {errorMessage && (
@@ -378,7 +453,7 @@ export default function CreateStoreCreditJob() {
                 min={STORE_CREDIT_RULES.minAmount}
                 step={0.01}
                 max={STORE_CREDIT_RULES.maxAmount}
-                onChange={(event: Event) =>
+                onInput={(event: Event) =>
                   setAmount((event.target as HTMLInputElement).value)
                 }
               />
@@ -465,7 +540,7 @@ export default function CreateStoreCreditJob() {
                       label="Send Time"
                       placeholder="HH:MM"
                       value={scheduledTime}
-                      onChange={(event: Event) =>
+                      onInput={(event: Event) =>
                         setScheduledTime((event.target as HTMLInputElement).value)
                       }
                     />
@@ -492,7 +567,7 @@ export default function CreateStoreCreditJob() {
                 <s-text-field
                   label="Scheduled message (optional)"
                   value={scheduledMessage}
-                  onChange={(event: Event) =>
+                  onInput={(event: Event) =>
                     setScheduledMessage((event.target as HTMLInputElement).value)
                   }
                 />

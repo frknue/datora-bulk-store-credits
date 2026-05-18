@@ -31,6 +31,12 @@ interface CreateJobFormOptions {
    * create.
    */
   resolvedRecipientCount: number | null;
+  /**
+   * App Bridge save-bar id to hide before navigating away on a successful
+   * submission. Without this, the save bar can persist on the destination
+   * page because the unmount cleanup races with the navigation.
+   */
+  saveBarId?: string;
 }
 
 function getFormErrors(
@@ -58,11 +64,15 @@ export function useCreateJobForm({
   pickedSegmentIds,
   pickedSegmentRecipientCount,
   resolvedRecipientCount,
+  saveBarId,
 }: CreateJobFormOptions) {
   const shopify = useAppBridge();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialValues = getCreateJobInitialValues(searchParams, shopTimezoneOffset);
+  const initialValuesRef = useRef(
+    getCreateJobInitialValues(searchParams, shopTimezoneOffset),
+  );
+  const initialValues = initialValuesRef.current;
   const hasExtensionCustomers = extensionCustomerIds.length > 0;
   const extensionCustomerIdsList = useMemo(
     () =>
@@ -98,10 +108,16 @@ export function useCreateJobForm({
   const [values, setValues] = useState(initialValues);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<CreateJobErrors>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const updateValue = useCallback(
     <K extends keyof CreateJobFormValues>(field: K, value: CreateJobFormValues[K]) => {
       setValues((currentValues) => ({ ...currentValues, [field]: value }));
+      setErrors((currentErrors) => {
+        if (!(field in currentErrors)) return currentErrors;
+        const { [field]: _removed, ...rest } = currentErrors;
+        return rest;
+      });
     },
     [],
   );
@@ -139,6 +155,7 @@ export function useCreateJobForm({
     if (Object.keys(validationErrors).length > 0) return;
 
     setSubmitting(true);
+    setSubmitError(null);
     shopify.loading(true);
 
     try {
@@ -157,15 +174,22 @@ export function useCreateJobForm({
       });
 
       if (!response.ok) {
-        shopify.toast.show("Create failed", { isError: true });
+        const errorBody = await response.json().catch(() => null);
+        setSubmitError(
+          errorBody?.message ??
+            "Couldn't create the job. Please try again in a moment.",
+        );
         return;
       }
 
+      if (saveBarId) shopify.saveBar.hide(saveBarId);
       shopify.toast.show("Job created");
       navigate("/app/gift-cards");
     } catch (error) {
       console.error("Error creating job:", error);
-      shopify.toast.show("Create failed", { isError: true });
+      setSubmitError(
+        "Couldn't create the job. Check your connection and try again.",
+      );
     } finally {
       setSubmitting(false);
       shopify.loading(false);
@@ -180,6 +204,7 @@ export function useCreateJobForm({
     segmentRecipientCount,
     shopCurrency,
     navigate,
+    saveBarId,
   ]);
 
   const handleSubmitRef = useRef(handleSubmit);
@@ -191,6 +216,12 @@ export function useCreateJobForm({
     handleSubmitRef.current();
   }, []);
 
+  const reset = useCallback(() => {
+    setValues(initialValuesRef.current);
+    setErrors({});
+    setSubmitError(null);
+  }, []);
+
   const timezoneOptions = useMemo(
     () => timezoneLabels.map((tz) => ({ label: tz.label, value: tz.value })),
     [],
@@ -198,8 +229,10 @@ export function useCreateJobForm({
 
   return {
     values,
+    initialValues,
     errors,
     submitting,
+    submitError,
     hasCustomerIds,
     customerIdsList,
     recipientCount,
@@ -207,6 +240,7 @@ export function useCreateJobForm({
     isAtLimit,
     remaining,
     handleSubmit: stableHandleSubmit,
+    reset,
     timezoneOptions,
     handlePresetChange,
     setCount: (value: string) => updateValue("count", value),

@@ -14,6 +14,8 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 
 const MIN_MESSAGE_LENGTH = 10;
 
+const CONTACT_SAVE_BAR = "contact-form-save-bar";
+
 const SUBJECTS = [
   { label: "Feedback", value: "feedback" },
   { label: "Feature", value: "feature" },
@@ -75,6 +77,7 @@ export default function Contact() {
   const fetcher = useFetcher<typeof action>();
 
   const initialSubject = searchParams.get("subject") ?? "feedback";
+  const initialSubjectRef = useRef(initialSubject);
   const [subject, setSubject] = useState(initialSubject);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -82,6 +85,51 @@ export default function Contact() {
 
   const loading = fetcher.state !== "idle";
   const errors: FieldErrors = fetcher.data?.errors ?? {};
+  const [sendError, setSendError] = useState<string | null>(null);
+  const lastHandledResponseRef = useRef<typeof fetcher.data>(undefined);
+
+  const isDirty =
+    subject !== initialSubjectRef.current ||
+    name !== "" ||
+    email !== "" ||
+    message !== "";
+
+  useEffect(() => {
+    if (isDirty) shopify.saveBar.show(CONTACT_SAVE_BAR);
+    else shopify.saveBar.hide(CONTACT_SAVE_BAR);
+  }, [isDirty, shopify]);
+
+  useEffect(() => {
+    return () => {
+      shopify.saveBar.hide(CONTACT_SAVE_BAR);
+    };
+  }, [shopify]);
+
+  const handleBreadcrumbClick = useCallback(async () => {
+    try {
+      await shopify.saveBar.leaveConfirmation();
+    } catch {
+      return;
+    }
+    navigate("/app");
+  }, [shopify, navigate]);
+
+  const handleCancel = useCallback(async () => {
+    try {
+      await shopify.saveBar.leaveConfirmation();
+    } catch {
+      return;
+    }
+    navigate("/app");
+  }, [shopify, navigate]);
+
+  const handleDiscard = useCallback(() => {
+    setSubject(initialSubjectRef.current);
+    setName("");
+    setEmail("");
+    setMessage("");
+    setSendError(null);
+  }, []);
 
   const handleSubmit = useCallback(() => {
     fetcher.submit(
@@ -90,8 +138,6 @@ export default function Contact() {
     );
   }, [fetcher, subject, name, email, message]);
 
-  const lastHandledResponseRef = useRef<typeof fetcher.data>(undefined);
-
   useEffect(() => {
     if (fetcher.state !== "idle") return;
     if (!fetcher.data) return;
@@ -99,25 +145,48 @@ export default function Contact() {
     lastHandledResponseRef.current = fetcher.data;
 
     if (fetcher.data.ok) {
+      setSendError(null);
+      shopify.saveBar.hide(CONTACT_SAVE_BAR);
       shopify.toast.show("Message sent");
       navigate("/app");
       return;
     }
 
     if (Object.keys(fetcher.data.errors ?? {}).length === 0) {
-      shopify.toast.show("Send failed", { isError: true });
+      setSendError(
+        "Couldn't send your message. Check your connection and try again.",
+      );
+    } else {
+      setSendError(null);
     }
   }, [fetcher.state, fetcher.data, shopify, navigate]);
 
   return (
     <s-page heading="Contact us" inlineSize="base">
-      <s-link slot="breadcrumb-actions" href="/app">
+      <s-button
+        slot="breadcrumb-actions"
+        variant="tertiary"
+        onClick={handleBreadcrumbClick}
+      >
         Dashboard
-      </s-link>
+      </s-button>
+
+      <ui-save-bar id={CONTACT_SAVE_BAR}>
+        <button
+          {...{ variant: "primary", loading: loading || undefined }}
+          onClick={handleSubmit}
+          disabled={loading || undefined}
+        >
+          Send
+        </button>
+        <button onClick={handleDiscard}>Discard</button>
+      </ui-save-bar>
 
       <s-stack direction="block" gap="base">
         <s-section padding="base">
           <s-stack direction="block" gap="base">
+            {sendError && <s-banner tone="critical">{sendError}</s-banner>}
+
             <s-select
               label="Subject"
               value={subject}
@@ -171,7 +240,7 @@ export default function Contact() {
             <s-stack direction="inline" gap="small" justifyContent="end">
               <s-button
                 variant="tertiary"
-                onClick={() => navigate("/app")}
+                onClick={handleCancel}
                 disabled={loading || undefined}
               >
                 Cancel

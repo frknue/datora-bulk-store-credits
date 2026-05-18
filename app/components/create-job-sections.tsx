@@ -199,7 +199,7 @@ export function CreateJobSchedulingSection({
                   labelAccessibilityVisibility="exclusive"
                   placeholder="HH:MM"
                   value={scheduledTime}
-                  onChange={(event: Event) =>
+                  onInput={(event: Event) =>
                     onScheduledTimeChange((event.target as HTMLInputElement).value)
                   }
                   error={errors.scheduledTime}
@@ -234,7 +234,7 @@ export function CreateJobSchedulingSection({
                 labelAccessibilityVisibility="exclusive"
                 value={scheduledMessage}
                 maxLength={globalVarsCreateGiftCards.scheduledMessageMaxChars}
-                onChange={(event: Event) =>
+                onInput={(event: Event) =>
                   onScheduledMessageChange((event.target as HTMLInputElement).value)
                 }
                 error={errors.scheduledMessage}
@@ -269,7 +269,7 @@ export function CreateJobSavePresetSection({
           label="Preset Name"
           value={presetName}
           maxLength={globalVarsCreateGiftCards.presetMaxChars}
-          onChange={(event: Event) =>
+          onInput={(event: Event) =>
             onPresetNameChange((event.target as HTMLInputElement).value)
           }
           error={presetNameError}

@@ -1,8 +1,7 @@
 import {
   useLoaderData,
-  useActionData,
+  useNavigate,
   useOutletContext,
-  Form,
   useFetcher,
 } from "react-router";
 import { useState, useCallback, useEffect } from "react";
@@ -142,39 +141,109 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   return { success: false };
 };
 
+const SETTINGS_SAVE_BAR = "settings-save-bar";
+
 export default function Settings() {
   const { autoDeactivateDays, slackWebhookUrl } = useLoaderData<LoaderData>();
-  const actionData = useActionData<ActionData>();
   const { subscriptionPlan } = useOutletContext<AppOutletContext>();
   const shopify = useAppBridge();
+  const navigate = useNavigate();
+  const deactivationFetcher = useFetcher<ActionData>();
+  const slackFetcher = useFetcher<ActionData>();
   const testFetcher = useFetcher<ActionData>();
   const canSlack = canUseSlackNotifications(subscriptionPlan);
 
-  // Auto-deactivation state
+  const initialDeactivateEnabled = autoDeactivateDays !== null;
+  const initialDays =
+    autoDeactivateDays !== null ? String(autoDeactivateDays) : "90";
+  const initialSlackEnabled = slackWebhookUrl !== null;
+  const initialWebhookUrl = slackWebhookUrl ?? "";
+
   const [deactivateEnabled, setDeactivateEnabled] = useState(
-    autoDeactivateDays !== null,
+    initialDeactivateEnabled,
   );
-  const [days, setDays] = useState(
-    autoDeactivateDays !== null ? String(autoDeactivateDays) : "90",
-  );
+  const [days, setDays] = useState(initialDays);
+  const [slackEnabled, setSlackEnabled] = useState(initialSlackEnabled);
+  const [webhookUrl, setWebhookUrl] = useState(initialWebhookUrl);
 
-  // Slack state
-  const [slackEnabled, setSlackEnabled] = useState(slackWebhookUrl !== null);
-  const [webhookUrl, setWebhookUrl] = useState(slackWebhookUrl ?? "");
+  const [deactivationBaseline, setDeactivationBaseline] = useState({
+    enabled: initialDeactivateEnabled,
+    days: initialDays,
+  });
+  const [slackBaseline, setSlackBaseline] = useState({
+    enabled: initialSlackEnabled,
+    url: initialWebhookUrl,
+  });
 
-  // Toast for form actions
+  const isDeactivationDirty =
+    deactivateEnabled !== deactivationBaseline.enabled ||
+    days !== deactivationBaseline.days;
+  const isSlackDirty =
+    canSlack &&
+    (slackEnabled !== slackBaseline.enabled ||
+      webhookUrl !== slackBaseline.url);
+  const isAnyDirty = isDeactivationDirty || isSlackDirty;
+  const isSaving =
+    deactivationFetcher.state !== "idle" || slackFetcher.state !== "idle";
+
   useEffect(() => {
-    if (!actionData) return;
-    if (actionData.success && actionData.intent === "saveAutoDeactivation") {
-      shopify.toast.show("Settings saved");
-    } else if (actionData.success && actionData.intent === "saveSlackWebhook") {
-      shopify.toast.show("Settings saved");
-    } else if (actionData.error) {
-      shopify.toast.show("Save failed", { isError: true });
+    if (isAnyDirty) {
+      shopify.saveBar.show(SETTINGS_SAVE_BAR);
+    } else {
+      shopify.saveBar.hide(SETTINGS_SAVE_BAR);
     }
-  }, [actionData, shopify]);
+  }, [isAnyDirty, shopify]);
 
-  // Toast for test fetcher
+  useEffect(() => {
+    return () => {
+      shopify.saveBar.hide(SETTINGS_SAVE_BAR);
+    };
+  }, [shopify]);
+
+  const handleBreadcrumbClick = useCallback(async () => {
+    try {
+      await shopify.saveBar.leaveConfirmation();
+    } catch {
+      return;
+    }
+    navigate("/app");
+  }, [shopify, navigate]);
+
+  useEffect(() => {
+    if (deactivationFetcher.state !== "idle" || !deactivationFetcher.data)
+      return;
+    const data = deactivationFetcher.data;
+    if (data.success && data.intent === "saveAutoDeactivation") {
+      setDeactivationBaseline({ enabled: deactivateEnabled, days });
+      shopify.toast.show("Settings saved");
+    } else if (!data.success && data.intent === "saveAutoDeactivation") {
+      shopify.toast.show(data.error ?? "Save failed", { isError: true });
+    }
+  }, [
+    deactivationFetcher.state,
+    deactivationFetcher.data,
+    deactivateEnabled,
+    days,
+    shopify,
+  ]);
+
+  useEffect(() => {
+    if (slackFetcher.state !== "idle" || !slackFetcher.data) return;
+    const data = slackFetcher.data;
+    if (data.success && data.intent === "saveSlackWebhook") {
+      setSlackBaseline({ enabled: slackEnabled, url: webhookUrl });
+      shopify.toast.show("Settings saved");
+    } else if (!data.success && data.intent === "saveSlackWebhook") {
+      shopify.toast.show(data.error ?? "Save failed", { isError: true });
+    }
+  }, [
+    slackFetcher.state,
+    slackFetcher.data,
+    slackEnabled,
+    webhookUrl,
+    shopify,
+  ]);
+
   useEffect(() => {
     if (!testFetcher.data) return;
     if (testFetcher.data.success) {
@@ -204,22 +273,68 @@ export default function Settings() {
     testFetcher.submit({ intent: "testSlackWebhook" }, { method: "post" });
   }, [testFetcher]);
 
+  const handleSave = useCallback(() => {
+    if (isDeactivationDirty) {
+      deactivationFetcher.submit(
+        {
+          intent: "saveAutoDeactivation",
+          enabled: String(deactivateEnabled),
+          days,
+        },
+        { method: "post" },
+      );
+    }
+    if (isSlackDirty) {
+      slackFetcher.submit(
+        {
+          intent: "saveSlackWebhook",
+          slackEnabled: String(slackEnabled),
+          slackWebhookUrl: webhookUrl,
+        },
+        { method: "post" },
+      );
+    }
+  }, [
+    isDeactivationDirty,
+    isSlackDirty,
+    deactivateEnabled,
+    days,
+    slackEnabled,
+    webhookUrl,
+    deactivationFetcher,
+    slackFetcher,
+  ]);
+
+  const handleDiscard = useCallback(() => {
+    setDeactivateEnabled(deactivationBaseline.enabled);
+    setDays(deactivationBaseline.days);
+    setSlackEnabled(slackBaseline.enabled);
+    setWebhookUrl(slackBaseline.url);
+  }, [deactivationBaseline, slackBaseline]);
+
   return (
     <s-page heading="Settings" inlineSize="base">
-      <s-link slot="breadcrumb-actions" href="/app">
+      <s-button
+        slot="breadcrumb-actions"
+        variant="tertiary"
+        onClick={handleBreadcrumbClick}
+      >
         Dashboard
-      </s-link>
+      </s-button>
+
+      <ui-save-bar id={SETTINGS_SAVE_BAR}>
+        <button
+          {...{ variant: "primary", loading: isSaving || undefined }}
+          onClick={handleSave}
+        >
+          Save
+        </button>
+        <button onClick={handleDiscard}>Discard</button>
+      </ui-save-bar>
 
       <s-stack direction="block" gap="large">
         {/* Auto-Deactivation Section */}
-        <Form method="post">
-          <input type="hidden" name="intent" value="saveAutoDeactivation" />
-          <input
-            type="hidden"
-            name="enabled"
-            value={String(deactivateEnabled)}
-          />
-
+        <div>
           <s-box paddingBlockEnd="large">
             <s-grid
               gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 2fr"
@@ -267,30 +382,17 @@ export default function Settings() {
                       remaining balance — customers will lose access to any
                       unspent funds.
                     </s-banner>
-
-                    <div>
-                      <s-button variant="primary" type="submit">
-                        Save
-                      </s-button>
-                    </div>
                   </s-stack>
                 </s-section>
               </s-grid-item>
             </s-grid>
           </s-box>
-        </Form>
+        </div>
 
         <s-divider />
 
         {/* Slack Notifications Section */}
-        <Form method="post">
-          <input type="hidden" name="intent" value="saveSlackWebhook" />
-          <input
-            type="hidden"
-            name="slackEnabled"
-            value={String(slackEnabled)}
-          />
-
+        <div>
           <s-box paddingBlockEnd="large">
             <s-grid
               gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 2fr"
@@ -336,11 +438,8 @@ export default function Settings() {
                         </>
                       )}
 
-                      <s-stack direction="inline" gap="base">
-                        <s-button variant="primary" type="submit">
-                          Save
-                        </s-button>
-                        {slackEnabled && webhookUrl && (
+                      {slackEnabled && webhookUrl && !isSlackDirty && (
+                        <div>
                           <s-button
                             variant="secondary"
                             onClick={handleTestSlack}
@@ -350,8 +449,8 @@ export default function Settings() {
                           >
                             Send test notification
                           </s-button>
-                        )}
-                      </s-stack>
+                        </div>
+                      )}
                     </s-stack>
                   ) : (
                     <s-text>
@@ -364,7 +463,7 @@ export default function Settings() {
               </s-grid-item>
             </s-grid>
           </s-box>
-        </Form>
+        </div>
 
         <AppPageFooter />
       </s-stack>

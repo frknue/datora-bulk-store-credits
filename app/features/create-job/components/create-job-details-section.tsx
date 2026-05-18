@@ -85,7 +85,7 @@ export function CreateJobDetailsSection({
               min={1}
               max={countFieldMax}
               disabled={isAtLimit || undefined}
-              onChange={(event: Event) =>
+              onInput={(event: Event) =>
                 onCountChange((event.target as HTMLInputElement).value)
               }
               error={errors.count}
@@ -99,7 +99,7 @@ export function CreateJobDetailsSection({
             step={0.01}
             max={globalVarsCreateGiftCards.valueMax}
             disabled={isAtLimit || undefined}
-            onChange={(event: Event) =>
+            onInput={(event: Event) =>
               onValueChange((event.target as HTMLInputElement).value)
             }
             error={errors.value}
@@ -144,7 +144,7 @@ export function CreateJobDetailsSection({
               value={prefix}
               maxLength={globalVarsCreateGiftCards.prefixMaxChars}
               disabled={isAtLimit || undefined}
-              onChange={(event: Event) =>
+              onInput={(event: Event) =>
                 onPrefixChange((event.target as HTMLInputElement).value)
               }
               error={errors.prefix}
@@ -162,7 +162,7 @@ export function CreateJobDetailsSection({
               value={postfix}
               maxLength={globalVarsCreateGiftCards.postfixMaxChars}
               disabled={isAtLimit || undefined}
-              onChange={(event: Event) =>
+              onInput={(event: Event) =>
                 onPostfixChange((event.target as HTMLInputElement).value)
               }
               error={errors.postfix}
@@ -192,7 +192,7 @@ export function CreateJobDetailsSection({
           value={note}
           maxLength={globalVarsCreateGiftCards.noteMaxChars}
           disabled={isAtLimit || undefined}
-          onChange={(event: Event) =>
+          onInput={(event: Event) =>
             onNoteChange((event.target as HTMLTextAreaElement).value)
           }
           error={errors.note}

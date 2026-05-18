@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { redirect, useLoaderData, useOutletContext } from "react-router";
 import {
-  CreateJobCustomerBanner,
+  redirect,
+  useLoaderData,
+  useNavigate,
+  useOutletContext,
+} from "react-router";
+import { useAppBridge } from "@shopify/app-bridge-react";
+import {
   CreateJobDetailsSection,
   CreateJobPlanBanner,
   CreateJobPresetSection,
@@ -19,6 +24,8 @@ import type { AppOutletContext } from "../lib/types/app";
 import type { LoaderFunctionArgs } from "react-router";
 import type { StoreCreditPickerCustomer } from "./api.store-credits.customers";
 import type { StoreCreditPickerSegment } from "./api.store-credits.segments";
+
+const CREATE_JOB_SAVE_BAR = "create-gift-card-job-save-bar";
 
 type SelectedCustomer = Pick<StoreCreditPickerCustomer, "id" | "name" | "email">;
 type SelectedSegment = Pick<StoreCreditPickerSegment, "id" | "name" | "count">;
@@ -44,6 +51,8 @@ export default function CreateJob() {
     shopMetadataLoaded,
   } =
     useOutletContext<AppOutletContext>();
+  const shopify = useAppBridge();
+  const navigate = useNavigate();
   const displayCurrency = shopCurrency || "USD";
   const planMaxAmount = subscriptionPlan.maxGiftCards;
 
@@ -137,14 +146,17 @@ export default function CreateJob() {
 
   const {
     values,
+    initialValues,
     errors,
     submitting,
+    submitError,
     hasCustomerIds,
     recipientCount,
     isUnlimited,
     isAtLimit,
     remaining,
     handleSubmit,
+    reset: resetForm,
     timezoneOptions,
     handlePresetChange,
     setCount,
@@ -173,6 +185,7 @@ export default function CreateJob() {
     pickedSegmentIds,
     pickedSegmentRecipientCount,
     resolvedRecipientCount,
+    saveBarId: CREATE_JOB_SAVE_BAR,
   });
 
   // 1 recipient = 1 gift card. When sending by email, keep the form's count
@@ -201,6 +214,53 @@ export default function CreateJob() {
     scheduledTimezone,
     scheduledMessage,
   } = values;
+
+  const isDirty =
+    values.count !== initialValues.count ||
+    values.value !== initialValues.value ||
+    values.prefix !== initialValues.prefix ||
+    values.postfix !== initialValues.postfix ||
+    values.codeLength !== initialValues.codeLength ||
+    values.note !== initialValues.note ||
+    values.expireDate !== initialValues.expireDate ||
+    values.selectedPreset !== initialValues.selectedPreset ||
+    values.savePreset !== initialValues.savePreset ||
+    values.presetName !== initialValues.presetName ||
+    values.scheduledSend !== initialValues.scheduledSend ||
+    values.scheduledDate !== initialValues.scheduledDate ||
+    values.scheduledTime !== initialValues.scheduledTime ||
+    values.scheduledTimezone !== initialValues.scheduledTimezone ||
+    values.scheduledMessage !== initialValues.scheduledMessage ||
+    sendByEmail ||
+    selectedCustomers.length > 0 ||
+    selectedSegments.length > 0;
+
+  useEffect(() => {
+    if (isDirty) shopify.saveBar.show(CREATE_JOB_SAVE_BAR);
+    else shopify.saveBar.hide(CREATE_JOB_SAVE_BAR);
+  }, [isDirty, shopify]);
+
+  useEffect(() => {
+    return () => {
+      shopify.saveBar.hide(CREATE_JOB_SAVE_BAR);
+    };
+  }, [shopify]);
+
+  const handleBreadcrumbClick = useCallback(async () => {
+    try {
+      await shopify.saveBar.leaveConfirmation();
+    } catch {
+      return;
+    }
+    navigate("/app");
+  }, [shopify, navigate]);
+
+  const handleDiscard = useCallback(() => {
+    resetForm();
+    setSendByEmail(false);
+    setSelectedCustomers([]);
+    setSelectedSegments([]);
+  }, [resetForm]);
 
   const openCustomerPicker = useCallback(() => {
     setPickerQuery("");
@@ -363,9 +423,13 @@ export default function CreateJob() {
 
   return (
     <s-page heading="Create Gift Cards" inlineSize="base">
-      <s-link slot="breadcrumb-actions" href="/app">
+      <s-button
+        slot="breadcrumb-actions"
+        variant="tertiary"
+        onClick={handleBreadcrumbClick}
+      >
         Dashboard
-      </s-link>
+      </s-button>
       <s-button
         slot="primary-action"
         variant="primary"
@@ -384,30 +448,57 @@ export default function CreateJob() {
         Create gift cards
       </s-button>
 
+      <ui-save-bar id={CREATE_JOB_SAVE_BAR}>
+        <button
+          {...{ variant: "primary", loading: submitting || undefined }}
+          onClick={handleSubmit}
+          disabled={
+            submitting ||
+            isAtLimit ||
+            (sendByEmail &&
+              !hasExtensionCustomers &&
+              selectedCustomers.length === 0 &&
+              selectedSegments.length === 0) ||
+            undefined
+          }
+        >
+          Create gift cards
+        </button>
+        <button onClick={handleDiscard}>Discard</button>
+      </ui-save-bar>
+
       <s-stack direction="block" gap="base">
         <s-section>
           <s-stack direction="block" gap="base">
-            <CreateJobPlanBanner
-              planName={subscriptionPlan.name}
-              isUnlimited={isUnlimited}
-              isAtLimit={isAtLimit}
-              remaining={remaining}
-              planMaxAmount={planMaxAmount}
-            />
-
-            {hasCustomerIds && (
-              <CreateJobCustomerBanner customerCount={recipientCount} />
-            )}
-
-            {!shopMetadataLoaded && (
+            {/* Single banner by priority — BFS 4.3.4 forbids stacked banners
+                inside one card. critical > warning > info; the plan banner
+                is the default informational fallback. */}
+            {submitError ? (
+              <s-banner tone="critical">{submitError}</s-banner>
+            ) : !shopMetadataLoaded ? (
               <s-banner tone="warning">
                 We couldn&apos;t load your shop currency and timezone. Currency is
                 shown with a fallback for display only, and scheduled email jobs
                 require manual timezone selection until shop metadata loads again.
               </s-banner>
+            ) : (
+              <CreateJobPlanBanner
+                planName={subscriptionPlan.name}
+                isUnlimited={isUnlimited}
+                isAtLimit={isAtLimit}
+                remaining={remaining}
+                planMaxAmount={planMaxAmount}
+              />
             )}
 
-            {presets.length > 0 && subscriptionPlan.presets && (
+            {hasCustomerIds && (
+              <s-paragraph color="subdued">
+                <strong>{recipientCount} customer(s)</strong> selected. Gift
+                cards will be sent to these customers by email.
+              </s-paragraph>
+            )}
+
+            {subscriptionPlan.presets && presets.length > 0 && (
               <CreateJobPresetSection
                 presets={presets}
                 selectedPreset={selectedPreset}
@@ -466,12 +557,21 @@ export default function CreateJob() {
                 label="Send by email to customers"
                 details="When off, gift cards are generated as a batch with no recipients."
                 checked={sendByEmail}
+                disabled={!subscriptionPlan.extension || undefined}
                 onChange={(event: Event) =>
                   setSendByEmail((event.target as HTMLInputElement).checked)
                 }
               />
 
-              {sendByEmail && (
+              {!subscriptionPlan.extension && (
+                <s-banner tone="info">
+                  Email delivery is available on the Basic plan and above.{" "}
+                  <s-link href="/app/subscriptions">Upgrade your plan</s-link>{" "}
+                  to send gift cards by email.
+                </s-banner>
+              )}
+
+              {sendByEmail && subscriptionPlan.extension && (
                 <s-stack direction="block" gap="base">
                   <s-stack
                     direction="inline"
