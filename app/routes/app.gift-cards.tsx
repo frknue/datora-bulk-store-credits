@@ -245,20 +245,19 @@ export default function Dashboard() {
       </s-button>
 
       <s-stack direction="block" gap="base">
-        {actionError && (
+        {/* Single prioritized banner — critical hides the plan-limit warning
+            while actionError is present (BFS 4.3.4). */}
+        {actionError ? (
           <s-banner tone="critical" dismissible onDismiss={clearActionError}>
             {actionError}
           </s-banner>
-        )}
-
-        {/* Plan limit warning */}
-        {isAtLimit && (
+        ) : isAtLimit ? (
           <s-banner tone="warning">
             You&apos;ve reached your monthly limit of {formatNumber(planMaxAmount, 0)}{" "}
             gift cards on the {subscriptionPlan.name} plan.{" "}
             <s-link href="/app/subscriptions">Upgrade your plan</s-link> to create more.
           </s-banner>
-        )}
+        ) : null}
 
         {totalJobs > 0 && (
           <DashboardStatCards

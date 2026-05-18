@@ -263,9 +263,10 @@ export function DownloadForm({
           </s-grid>
 
           {!canFormat ? (
-            <s-text>
-              To format codes,{" "}
-              <s-link href="/app/subscriptions">upgrade your plan</s-link>.
+            <s-text color="subdued">
+              Code formatting is available on the Basic plan and above.{" "}
+              <s-link href="/app/subscriptions">Upgrade your plan</s-link> to
+              customize how gift card codes are formatted.
             </s-text>
           ) : null}
 

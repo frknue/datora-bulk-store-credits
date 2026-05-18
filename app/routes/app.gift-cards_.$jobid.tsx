@@ -331,21 +331,18 @@ export default function JobDetails() {
       />
 
       <s-stack direction="block" gap="base">
-        {actionError && (
+        {/* Single prioritized banner — five conditions could each emit a
+            banner. Render at most one (BFS 4.3.4). Priority:
+            actionError (critical) > job.status=failed (critical) >
+            isDeactivationRunning (warning) > isRunning (info) >
+            job.status=completed (success). */}
+        {actionError ? (
           <s-banner tone="critical" dismissible onDismiss={clearActionError}>
             {actionError}
           </s-banner>
-        )}
-
-        {isRunning && (
-          <JobRunningProgressBanner
-            done={done}
-            total={total}
-            progressPercent={progressPercent}
-          />
-        )}
-
-        {isDeactivationRunning && (
+        ) : job.status === "failed" && job.errorMessage ? (
+          <JobErrorBanner errorMessage={job.errorMessage} />
+        ) : isDeactivationRunning ? (
           <s-banner tone="warning">
             <s-stack direction="inline" gap="small" alignItems="center">
               <s-spinner size="base" />
@@ -357,13 +354,15 @@ export default function JobDetails() {
               </s-text>
             </s-stack>
           </s-banner>
-        )}
-
-        {job.status === "failed" && job.errorMessage && (
-          <JobErrorBanner errorMessage={job.errorMessage} />
-        )}
-
-        {job.status === "completed" && <JobSuccessBanner total={total} />}
+        ) : isRunning ? (
+          <JobRunningProgressBanner
+            done={done}
+            total={total}
+            progressPercent={progressPercent}
+          />
+        ) : job.status === "completed" ? (
+          <JobSuccessBanner total={total} />
+        ) : null}
 
         {canViewUsage && (
           <s-section>

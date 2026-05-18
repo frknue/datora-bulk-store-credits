@@ -573,12 +573,10 @@ export function JobUsageTrackingSection({
             </s-box>
 
             {usageRecordCount > usagePreviewCount && (
-              <s-banner tone="info">
-                <s-text>
-                  Showing the first {usagePreviewCount} gift cards. Export CSV to view all{" "}
-                  {usageRecordCount} records.
-                </s-text>
-              </s-banner>
+              <s-text color="subdued">
+                Showing the first {usagePreviewCount} gift cards. Export CSV to
+                view all {usageRecordCount} records.
+              </s-text>
             )}
 
             <s-box

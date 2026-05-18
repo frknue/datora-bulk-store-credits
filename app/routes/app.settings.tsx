@@ -367,6 +367,9 @@ export default function Settings() {
               <s-grid-item>
                 <s-section>
                   <s-stack gap="base">
+                    {/* When the critical deactivationError banner is visible,
+                        suppress the permanent-disclaimer warning banner below
+                        so two banners never stack in this card (BFS 4.3.4). */}
                     {deactivationError && (
                       <s-banner tone="critical">{deactivationError}</s-banner>
                     )}
@@ -393,12 +396,14 @@ export default function Settings() {
                       </>
                     )}
 
-                    <s-banner tone="warning">
-                      Deactivation is permanent and cannot be undone. All gift
-                      cards in eligible jobs are deactivated, even those with a
-                      remaining balance — customers will lose access to any
-                      unspent funds.
-                    </s-banner>
+                    {!(deactivationError && !deactivateEnabled) && (
+                      <s-banner tone="warning">
+                        Deactivation is permanent and cannot be undone. All
+                        gift cards in eligible jobs are deactivated, even
+                        those with a remaining balance — customers will lose
+                        access to any unspent funds.
+                      </s-banner>
+                    )}
                   </s-stack>
                 </s-section>
               </s-grid-item>
