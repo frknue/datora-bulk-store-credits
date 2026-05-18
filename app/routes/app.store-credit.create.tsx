@@ -368,7 +368,10 @@ export default function CreateStoreCreditJob() {
 
         <s-section heading="Amount">
           <s-stack direction="block" gap="base">
-            <s-grid gridTemplateColumns="1fr 1fr" gap="base">
+            <s-grid
+              gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 1fr"
+              gap="base"
+            >
               <s-number-field
                 label="Amount"
                 value={amount}
@@ -443,7 +446,10 @@ export default function CreateStoreCreditJob() {
 
             {scheduleEnabled && (
               <s-stack direction="block" gap="base">
-                <s-grid gridTemplateColumns="1fr 1fr" gap="base">
+                <s-grid
+              gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 1fr"
+              gap="base"
+            >
                   <s-box>
                     <s-date-field
                       label="Send Date"

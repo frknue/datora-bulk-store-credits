@@ -33,7 +33,7 @@ export function DashboardStatCards({
   return (
     <s-section padding="base">
       <s-grid
-        gridTemplateColumns="@container (inline-size <= 400px) 1fr, 1fr auto 1fr auto 1fr auto 1fr"
+        gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr auto 1fr auto 1fr auto 1fr"
         gap="small"
       >
         <s-box paddingBlock="small-400" paddingInline="small-100">
@@ -256,10 +256,10 @@ function DashboardCalloutCard({
           <div
             style={{
               width: "5.5rem",
+              maxWidth: "30%",
               flexShrink: 0,
               display: "flex",
               alignItems: "center",
-              paddingRight: "1.5rem",
             }}
           >
             <img
@@ -301,7 +301,10 @@ export function DashboardCalloutCards({
     : "Upgrade plan";
 
   return (
-    <s-grid gridTemplateColumns="repeat(auto-fit, minmax(20rem, 1fr))" gap="base">
+    <s-grid
+      gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 1fr"
+      gap="base"
+    >
       {showContactCard && (
         <DashboardCalloutCard
           title="Need help or miss a feature?"

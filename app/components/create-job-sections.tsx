@@ -169,7 +169,10 @@ export function CreateJobSchedulingSection({
 
         {scheduledSend && (
           <s-stack direction="block" gap="base">
-            <s-grid gridTemplateColumns="1fr 1fr" gap="base">
+            <s-grid
+              gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 1fr"
+              gap="base"
+            >
               <s-box>
                 <s-stack direction="inline" gap="small-200" alignItems="center">
                   Send Date

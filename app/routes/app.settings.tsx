@@ -221,7 +221,10 @@ export default function Settings() {
           />
 
           <s-box paddingBlockEnd="large">
-            <s-grid gridTemplateColumns="1fr 2fr" gap="large">
+            <s-grid
+              gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 2fr"
+              gap="large"
+            >
               <s-grid-item>
                 <s-stack gap="small">
                   <s-heading>Auto-Deactivation</s-heading>
@@ -289,7 +292,10 @@ export default function Settings() {
           />
 
           <s-box paddingBlockEnd="large">
-            <s-grid gridTemplateColumns="1fr 2fr" gap="large">
+            <s-grid
+              gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 2fr"
+              gap="large"
+            >
               <s-grid-item>
                 <s-stack gap="small">
                   <s-heading>Slack Notifications</s-heading>

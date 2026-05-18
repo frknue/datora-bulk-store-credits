@@ -308,7 +308,7 @@ export default function Subscriptions() {
 
       <s-stack direction="block" gap="base">
         <s-grid
-          gridTemplateColumns="repeat(auto-fit, minmax(min(100%, 220px), 1fr))"
+          gridTemplateColumns="@container (inline-size <= 900px) 1fr, 1fr 1fr 1fr 1fr"
           gap="base"
         >
           {subscriptionPlans.map((plan) => (

@@ -71,7 +71,11 @@ export function CreateJobDetailsSection({
       </s-tooltip>
       <s-stack direction="block" gap="base">
         <s-grid
-          gridTemplateColumns={hideCount ? "1fr 1fr" : "1fr 1fr 1fr"}
+          gridTemplateColumns={
+            hideCount
+              ? "@container (inline-size <= 600px) 1fr, 1fr 1fr"
+              : "@container (inline-size <= 700px) 1fr, 1fr 1fr 1fr"
+          }
           gap="base"
         >
           {!hideCount && (
@@ -125,7 +129,10 @@ export function CreateJobDetailsSection({
           </s-box>
         </s-grid>
 
-        <s-grid gridTemplateColumns="1fr 1fr 1fr" gap="base">
+        <s-grid
+          gridTemplateColumns="@container (inline-size <= 700px) 1fr, 1fr 1fr 1fr"
+          gap="base"
+        >
           <s-box>
             <s-stack direction="inline" gap="small-200" alignItems="center">
               Prefix

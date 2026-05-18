@@ -75,7 +75,7 @@ function StoreCreditStatCards({
   return (
     <s-section padding="base">
       <s-grid
-        gridTemplateColumns="@container (inline-size <= 400px) 1fr, 1fr auto 1fr auto 1fr auto 1fr"
+        gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr auto 1fr auto 1fr auto 1fr"
         gap="small"
       >
         <s-box paddingBlock="small-400" paddingInline="small-100">

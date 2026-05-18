@@ -98,7 +98,7 @@ function OverviewStatCards({
   return (
     <s-section padding="base">
       <s-grid
-        gridTemplateColumns="@container (inline-size <= 400px) 1fr, 1fr auto 1fr auto 1fr auto 1fr"
+        gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr auto 1fr auto 1fr auto 1fr"
         gap="small"
       >
         <s-box paddingBlock="small-400" paddingInline="small-100">
@@ -264,7 +264,11 @@ export default function Overview() {
         />
 
         <s-grid
-          gridTemplateColumns={giftCardsAvailable ? "1fr 1fr" : "1fr"}
+          gridTemplateColumns={
+            giftCardsAvailable
+              ? "@container (inline-size <= 600px) 1fr, 1fr 1fr"
+              : "1fr"
+          }
           gap="base"
         >
           <QuickActionCard
@@ -284,7 +288,11 @@ export default function Overview() {
         </s-grid>
 
         <s-grid
-          gridTemplateColumns={giftCardsAvailable ? "1fr 1fr" : "1fr"}
+          gridTemplateColumns={
+            giftCardsAvailable
+              ? "@container (inline-size <= 600px) 1fr, 1fr 1fr"
+              : "1fr"
+          }
           gap="base"
         >
           <s-stack direction="block" gap="small">

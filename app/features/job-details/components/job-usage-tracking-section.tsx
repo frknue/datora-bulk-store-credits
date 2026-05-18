@@ -390,7 +390,10 @@ export function JobUsageTrackingSection({
           </s-banner>
         )}
 
-        <s-grid gridTemplateColumns="repeat(auto-fit, minmax(180px, 1fr))" gap="base">
+        <s-grid
+          gridTemplateColumns="@container (inline-size <= 700px) 1fr 1fr, 1fr 1fr 1fr 1fr"
+          gap="base"
+        >
           <UsageMetricCard
             label="Total Redeemed"
             value={formatCurrencyAmount(usageMetrics.totalRedeemed, currency)}
@@ -410,7 +413,10 @@ export function JobUsageTrackingSection({
           />
         </s-grid>
 
-        <s-grid gridTemplateColumns="repeat(auto-fit, minmax(300px, 1fr))" gap="base">
+        <s-grid
+          gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 1fr"
+          gap="base"
+        >
           <UsageChartCard title="Redemption Status Distribution">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -504,7 +510,10 @@ export function JobUsageTrackingSection({
               </s-stack>
             </s-stack>
 
-            <s-grid gridTemplateColumns="repeat(auto-fit, minmax(220px, 1fr))" gap="base">
+            <s-grid
+              gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 1fr 1fr"
+              gap="base"
+            >
               <s-box background="subdued" borderRadius="large-100" padding="base">
                 <s-stack direction="block" gap="small">
                   <s-text type="strong">Balance Status</s-text>

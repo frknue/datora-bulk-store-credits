@@ -146,15 +146,17 @@ export default function App() {
         <s-link href="/app/contact">Contact</s-link>
         <s-link href="/app/settings">Settings</s-link>
       </s-app-nav>
-      <Outlet
-        context={{
-          subscriptionPlan,
-          shopCurrency,
-          shopTimezoneOffset,
-          shopMetadataLoaded,
-          openOnboarding,
-        }}
-      />
+      <s-query-container>
+        <Outlet
+          context={{
+            subscriptionPlan,
+            shopCurrency,
+            shopTimezoneOffset,
+            shopMetadataLoaded,
+            openOnboarding,
+          }}
+        />
+      </s-query-container>
       <OnboardingModal
         ref={onboardingModalRef}
         onComplete={handleOnboardingComplete}

@@ -54,7 +54,7 @@ export default function Help() {
 
       <s-stack direction="block" gap="large">
         <s-grid
-          gridTemplateColumns="1fr 1fr"
+          gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 1fr"
           gap="base"
         >
           {resources.map((resource) => (

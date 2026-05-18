@@ -187,7 +187,10 @@ export function DownloadForm({
           <s-text type="strong">Fields</s-text>
           <s-text>Select the fields to include. Code is always included.</s-text>
 
-          <s-grid gridTemplateColumns="1fr 1fr" gap="base">
+          <s-grid
+            gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 1fr"
+            gap="base"
+          >
             <s-stack direction="block" gap="small">
               <s-checkbox label="Code" checked disabled />
               {leftFields.map((field) => (
@@ -228,7 +231,10 @@ export function DownloadForm({
           <s-text type="strong">Code Format</s-text>
           <s-text>Define how the gift card code should be formatted.</s-text>
 
-          <s-grid gridTemplateColumns="1fr 1fr" gap="base">
+          <s-grid
+            gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 1fr"
+            gap="base"
+          >
             <s-checkbox
               label="Uppercase"
               checked={uppercase || undefined}

@@ -133,7 +133,10 @@ export default function Contact() {
               ))}
             </s-select>
 
-            <s-grid gridTemplateColumns="1fr 1fr" gap="base">
+            <s-grid
+              gridTemplateColumns="@container (inline-size <= 600px) 1fr, 1fr 1fr"
+              gap="base"
+            >
               <s-text-field
                 label="Name"
                 value={name}
