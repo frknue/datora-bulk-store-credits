@@ -23,10 +23,7 @@
     "typecheck": "npm run typecheck:app",
     "typecheck:app": "npx react-router typegen && tsc --noEmit",
     "test:worker": "cd services/worker && go test ./...",
-    "verify": "npm run lint && npm run typecheck && npm run test:worker",
-    "test:e2e:setup": "npx tsx e2e/auth/setup.ts",
-    "test:e2e": "npx playwright test",
-    "test:e2e:headed": "npx playwright test --headed"
+    "verify": "npm run lint && npm run typecheck && npm run test:worker"
   },
   "type": "module",
   "engines": {
@@ -53,7 +50,6 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
     "@shopify/api-codegen-preset": "^1.2.0",
     "@shopify/polaris-types": "^1.0.1",
     "@types/eslint": "^9.6.1",
